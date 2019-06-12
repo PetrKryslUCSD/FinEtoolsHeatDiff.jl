@@ -1,5 +1,6 @@
 module actuator_examples
 using FinEtools
+using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using UnicodePlots
 
@@ -40,7 +41,7 @@ function actuator2()
     Q = DV^2/resistivity/l^2; # rate of Joule heating, W/m^3
     T_substrate = 293; # substrate temperature in degrees Kelvin
     tol = 1e6*eps(h)
-    
+
     fens,fes =  H8hexahedron([x1 y0 z0; x2 y1 z1],m2,n1,p1);
     fens1,fes1  =  H8hexahedron([x1 y1 z0;x2 y2 z1],m2,n2,p1);
     fens,fes1,fes2  =  mergemeshes(fens1, fes1, fens, fes, tol);
@@ -69,13 +70,13 @@ function actuator2()
     fens1,fes1  =  H8hexahedron([x3 y0 z2;x4 y3 z3], m3,n5,p3);
     fens,fes1,fes2  =  mergemeshes(fens1, fes1, fens, fes, tol);
     fes =  cat(fes1,fes2);
-    
+
     fens,fes  =  H8toH20(fens,fes);
-    
+
     hotmater = MatHeatDiff(kappa)
     coldmater = MatHeatDiff(kappa)
     cl =  selectelem(fens, fes, box=[x0,x2,y0,y2,z0,z1],inflate = t/100);
-    
+
     hotfemm  =  FEMMHeatDiff(IntegDomain(subset(fes,cl), GaussRule(3, 3)), hotmater)
     coldfemm  = FEMMHeatDiff(IntegDomain(subset(fes,setdiff(collect(1:count(fes)), cl)),  GaussRule(3, 3)), coldmater)
     geom = NodalField(fens.xyz)
@@ -84,14 +85,14 @@ function actuator2()
     setebc!(Temp, fenids, true, 1, T_substrate)
     applyebc!(Temp)
     numberdofs!(Temp)
-    
+
     K = conductivity(hotfemm, geom, Temp) + conductivity(coldfemm, geom, Temp)
     fi = ForceIntensity(FFlt[Q]);
     F = distribloads(hotfemm, geom, Temp, fi, 3) + nzebcloadsconductivity(hotfemm, geom, Temp) + nzebcloadsconductivity(coldfemm, geom, Temp)
-    
+
     U = K\F
     scattersysvec!(Temp,U[:])
-    
+
     nList = selectnode(fens, box=[x1,x1,y0,y1,z1,z1], inflate=t/1000)
     y_i = geom.values[nList, 2]
     T_i = Temp.values[nList, 1]
@@ -119,7 +120,7 @@ function actuator2()
 end # actuator2
 
 function allrun()
-    println("#####################################################") 
+    println("#####################################################")
     println("# actuator2 ")
     actuator2()
     return true
