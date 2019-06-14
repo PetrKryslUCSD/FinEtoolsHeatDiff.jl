@@ -6,10 +6,11 @@
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: http://petrkryslucsd.github.io/FinEtoolsHeatDiff.jl/latest/
 
-# FinEtoolsHeatDiff: Linear heat diffusion analysis 
+# FinEtoolsHeatDiff: Linear heat diffusion analysis
 
-`FinEtools` is a package for basic operations on finite element meshes.
-`FinEtoolsHeatDiff` is a package using `FinEtools` to solve linear heat conduction (diffusion) problems.
+[`FinEtools`](https://github.com/PetrKryslUCSD/FinEtools.jl.git) is a package
+for basic operations on finite element meshes. `FinEtoolsHeatDiff` is a package
+using `FinEtools` to solve linear heat conduction (diffusion) problems.
 
 ## News
 
