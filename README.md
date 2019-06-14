@@ -19,7 +19,9 @@
 
 ## How to run
 
-Here is a record of the session to install this package and test it. You should see something similar. The git bash running on Windows 10 was used in this example.
+Here is a record of a session to install this package and test it. You should
+see something similar. The git bash running on Windows 10 was used in this
+example.
 
 ```
 PetrKrysl@Spectre MINGW64 /tmp/exp
