@@ -1,8 +1,10 @@
-[Table of contents](https://petrkryslucsd.github.io/FinEtools.jl/latest/index.html)
-
 # Guide
 
+The [`FinEtools`](https://petrkryslucsd.github.io/FinEtools.jl/latest/index.html) package is used here to solve heat conduction problems.
+
 ## Modules
+
+The package `FinEtoolsHeatDiff` has the following structure:
 
 - Top-level:
      `FinEtoolsHeatDiff` is the  top-level module.
