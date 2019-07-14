@@ -53,19 +53,20 @@ end
 
 Update material state.
 
-- `strain` = strain vector,
-`thstrain` = thermal strain vector,
+# Arguments
+- `gradT` = thermal gradient vector,
 - `t` = current time,
 - `dt` = current time step,
 - `loc` = location of the quadrature point in global Cartesian coordinates,
 - `label` = label of the finite element in which the quadrature point is located.
+- `quantity` = quantity to be output (`:heatflux`)
 
-Output:
-- `heatflux` = heat flux vector, allocated by the caller with a size of the
-  embedding space. The components of the heat flux vector are calculated and
-  stored in the `heatflux` vector.
-- `output` =  array which is (if necessary) allocated  in an appropriate size,
-  filled with the output quantity, and returned.
+# Output
+- `heatflux` = heat flux vector, allocated by the caller with a size of
+	  the embedding space. The components of the heat flux vector are
+	  calculated and stored in the `heatflux` vector.
+- `output` =  array which is (if necessary) allocated  in an appropriate
+      size, filled with the output quantity, and returned.
 """
 function update!(self::MatHeatDiff, heatflux::FFltVec, output::FFltVec, gradT::FFltVec, t::FFlt= 0.0, dt::FFlt= 0.0, loc::FFltMat=reshape(FFlt[],0,0), label::FInt=0, quantity=:nothing)
 	sdim = size(self.thermal_conductivity, 2)
@@ -73,7 +74,7 @@ function update!(self::MatHeatDiff, heatflux::FFltVec, output::FFltVec, gradT::F
     A_mul_B!(heatflux, self.thermal_conductivity, -gradT);
     if quantity == :nothing
         #Nothing to be copied to the output array
-    elseif quantity == :heatflux 
+    elseif quantity == :heatflux
         (length(output) >= sdim) || (output = zeros(sdim)) # make sure we can store it
         copyto!(output, heatflux);
     end
