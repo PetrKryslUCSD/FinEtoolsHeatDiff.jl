@@ -1,8 +1,8 @@
 """
     FEMMHeatDiffModule
 
-Module for operations on interiors of domains to construct system matrices and
-system vectors for linear heat conduction/diffusion.
+Module for operations on interiors of domains to construct system
+matrices and system vectors for linear heat conduction/diffusion.
 """
 module FEMMHeatDiffModule
 
@@ -67,11 +67,15 @@ function  _buffers1(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
 end
 
 """
-    conductivity(self::FEMMHeatDiff,
-      assembler::A, geom::NodalField{FFlt},
-      temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
+    conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
 
 Compute the conductivity matrix.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field
 """
 function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
     fes = self.integdomain.fes
@@ -105,11 +109,15 @@ function conductivity(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalFi
 end
 
 """
-    nzebcloadsconductivity(self::FEMMHeatDiff,
-      assembler::A,  geom::NodalField{FFlt},
-      temp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
+    nzebcloadsconductivity(self::FEMMHeatDiff, assembler::A,  geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
 
 Compute load vector for nonzero EBC of prescribed temperature.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field
 """
 function nzebcloadsconductivity(self::FEMMHeatDiff, assembler::A,  geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
     fes = self.integdomain.fes
@@ -151,6 +159,14 @@ end
     energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FFlt})
 
 Compute the "energy" integral over the interior domain.
+
+The "energy" density is the dot product of the gradient of temperature
+and the heat flux.
+
+# Arguments
+- `self` = model machine,
+- `geom` = geometry field,
+- `temp` = temperature field
 """
 function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FFlt})
     fes = self.integdomain.fes
@@ -180,26 +196,26 @@ function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FF
 end
 
 """
-    inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::NodalField{T}, temp::NodalField{FFlt}, felist::FIntVec, inspector::F, idat, quantity=:heatflux; context...) where {F<:Function}
+    inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::NodalField{T}, temp::NodalField{FFlt}, felist::FIntVec, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, F<:Function}
 
 Inspect integration point quantities.
 
-# Inputs
+# Arguments
 - `geom` - reference geometry field
 - `u` - displacement field (ignored)
 - `temp` - temperature field
-- `felist` - indexes of the finite elements that are to be inspected: The fes
-  to be included are: `fes[felist]`.
+- `felist` - indexes of the finite elements that are to be inspected:
+    The fes to be included are: `fes[felist]`.
 - `context`    - structure: see the update!() method of the material.
 - `inspector` - function with the signature
         `idat = inspector(idat, j, conn, x, out, loc);`
    where
     `idat` - a structure or an array that the inspector may
-           use to maintain some state,  for instance minimum or maximum of
-           stress, `j` is the element number, `conn` is the element connectivity,
-           `out` is the output of the update!() method,  `loc` is the location
-           of the integration point in the *reference* configuration.
-# Return
+           use to maintain some state,  for instance heat flux, `j` is the
+          element number, `conn` is the element connectivity, `out` is the
+          output of the `update!()` method,  `loc` is the location of the
+          integration point in the *reference* configuration.
+# Output
 The updated inspector data is returned.
 """
 function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::NodalField{T}, temp::NodalField{FFlt}, felist::FIntVec, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, F<:Function}

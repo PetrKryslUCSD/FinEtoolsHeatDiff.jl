@@ -11,7 +11,7 @@ import FinEtools.FENodeSetModule: FENodeSet
 import FinEtools.FESetModule: AbstractFESet, nodesperelem, manifdim
 import FinEtools.IntegDomainModule: IntegDomain, integrationdata, Jacobiansurface
 import FinEtools.FieldModule: ndofs, gatherdofnums!, gatherfixedvalues_asvec!, gathervalues_asvec!
-import FinEtools.NodalFieldModule: NodalField 
+import FinEtools.NodalFieldModule: NodalField
 import FinEtools.AssemblyModule: AbstractSysvecAssembler, AbstractSysmatAssembler, SysmatAssemblerSparseSymm, startassembly!, assemble!, makematrix!, makevector!, SysvecAssembler
 import FinEtools.FEMMBaseModule: AbstractFEMM
 import FinEtools.MatrixUtilityModule: add_gkgt_ut_only!, add_nnt_ut_only!, complete_lt!, locjac!
@@ -32,6 +32,12 @@ end
       geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
 
 Compute the surface heat transfer matrix.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field
 """
 function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
     fes = self.integdomain.fes
@@ -53,7 +59,7 @@ function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField
     for i = 1:nfes # Loop over elements
         fill!(He,  0.0); # Initialize element matrix
         for j=1:npts # Loop over quadrature points
-            locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j]) 
+            locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
             Jac = Jacobiansurface(self.integdomain, J, loc, fes.conn[i],  Ns[j]);
             add_nnt_ut_only!(He, Ns[j], self.surfacetransfercoeff*Jac*w[j])
         end # Loop over quadrature points
@@ -77,6 +83,13 @@ end
       ambtemp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
 
 Compute the load vector corresponding to surface heat transfer.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field
+- `ambtemp` = ambient temperature field on the surface
 """
 function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FFlt}, temp::NodalField{FFlt},  ambtemp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
     fes = self.integdomain.fes
@@ -101,7 +114,7 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
         if norm(pT, Inf) != 0.0    # Is the load nonzero?
             fill!(Fe,  0.0); # Initialize element matrix
             for j=1:npts # Loop over quadrature points
-                locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j]) 
+                locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
                 Jac = Jacobiansurface(self.integdomain, J, loc, fes.conn[i],  Ns[j]);
                 Ta = dot(vec(pT), vec(Ns[j]))
                 factor = Ta*self.surfacetransfercoeff*Jac*w[j]
@@ -114,7 +127,6 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
     F = makevector!(assembler);
     return F
 end
-
 
 function surfacetransferloads(self::FEMMHeatDiffSurf,
                                         geom::NodalField{FFlt},
@@ -129,6 +141,14 @@ end
       geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
 
 Compute load vector for nonzero EBC for fixed temperature.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field; the `fixed_values` attribute needs to list
+      the prescribed values of the temperature. This is performed with
+      `applyebc!`.
 """
 function nzebcsurfacetransferloads(self::FEMMHeatDiffSurf, assembler::A,  geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
     fes = self.integdomain.fes
@@ -154,7 +174,7 @@ function nzebcsurfacetransferloads(self::FEMMHeatDiffSurf, assembler::A,  geom::
         if norm(pT, Inf) != 0.0    # Is the load nonzero?
             fill!(He,  0.0);
             for j=1:npts # Loop over quadrature points
-                locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j]) 
+                locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
                 Jac = Jacobiansurface(self.integdomain, J, loc, fes.conn[i],  Ns[j]);
                 add_nnt_ut_only!(He, Ns[j], self.surfacetransfercoeff*Jac*w[j])
             end # Loop over quadrature points
