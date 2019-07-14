@@ -63,10 +63,9 @@ Update material state.
 
 # Output
 - `heatflux` = heat flux vector, allocated by the caller with a size of
-	  the embedding space. The components of the heat flux vector are
-	  calculated and stored in the `heatflux` vector.
-- `output` =  array which is (if necessary) allocated  in an appropriate
-      size, filled with the output quantity, and returned.
+  the embedding space. The components of the heat flux vector are
+  calculated and stored in the `heatflux` vector.
+- `output` =  array which is (if necessary) allocated  in an appropriate size, filled with the output quantity, and returned.
 """
 function update!(self::MatHeatDiff, heatflux::FFltVec, output::FFltVec, gradT::FFltVec, t::FFlt= 0.0, dt::FFlt= 0.0, loc::FFltMat=reshape(FFlt[],0,0), label::FInt=0, quantity=:nothing)
 	sdim = size(self.thermal_conductivity, 2)
