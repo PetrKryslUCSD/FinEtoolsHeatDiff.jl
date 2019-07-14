@@ -6,7 +6,7 @@
 ### Heat diffusion
 
 ```@autodocs
-Modules = [FinEtools, FinEtools.FEMMHeatDiffModule, FinEtools.FEMMHeatDiffSurfModule]
+Modules = [FinEtools, FinEtoolsHeatDiff.FEMMHeatDiffModule, FinEtoolsHeatDiff.FEMMHeatDiffSurfModule]
 Private = true
 Order = [:function]
 ```
@@ -16,7 +16,7 @@ Order = [:function]
 ### Heat conduction
 
 ```@autodocs
-Modules = [FinEtools, FinEtools.AlgoHeatDiffModule]
+Modules = [FinEtools, FinEtoolsHeatDiff.AlgoHeatDiffModule]
 Private = true
 Order = [:function]
 ```
@@ -26,7 +26,7 @@ Order = [:function]
 ### Material models for heat diffusion
 
 ```@autodocs
-Modules = [FinEtools, FinEtools.MatHeatDiffModule]
+Modules = [FinEtools, FinEtoolsHeatDiff.MatHeatDiffModule]
 Private = true
 Order = [:function]
 ```

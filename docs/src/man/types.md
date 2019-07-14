@@ -5,7 +5,7 @@
 ### Heat diffusion
 
 ```@autodocs
-Modules = [FinEtools, FinEtools.FEMMHeatDiffModule, FinEtools.FEMMHeatDiffSurfModule]
+Modules = [FinEtools, FinEtoolsHeatDiff.FEMMHeatDiffModule, FinEtoolsHeatDiff.FEMMHeatDiffSurfModule]
 Private = true
 Order = [:type]
 ```
@@ -16,7 +16,7 @@ Order = [:type]
 ### Material models for heat diffusion
 
 ```@autodocs
-Modules = [FinEtools, FinEtools.MatModule, FinEtools.MatHeatDiffModule]
+Modules = [FinEtools, FinEtools.MatModule, FinEtoolsHeatDiff.MatHeatDiffModule]
 Private = true
 Order = [:type]
 ```
