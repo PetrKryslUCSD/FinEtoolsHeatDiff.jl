@@ -17,7 +17,7 @@ import FinEtools.ElementalFieldModule: ElementalField
 import FinEtools.AssemblyModule: AbstractSysvecAssembler, AbstractSysmatAssembler, SysmatAssemblerSparseSymm, startassembly!, assemble!, makematrix!, makevector!, SysvecAssembler
 import FinEtools.ForceIntensityModule: ForceIntensity
 import FinEtools.FEMMBaseModule: AbstractFEMM, inspectintegpoints
-import FinEtools.MatrixUtilityModule: add_gkgt_ut_only!, complete_lt!, locjac!
+import FinEtools.MatrixUtilityModule: add_gkgt_ut_only!, complete_lt!, locjac!, add_nnt_ut_only!
 import LinearAlgebra: mul!, Transpose
 At_mul_B!(C, A, B) = mul!(C, Transpose(A), B)
 A_mul_B!(C, A, B) = mul!(C, A, B)
@@ -64,6 +64,28 @@ function  _buffers1(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
     kappa_bar = fill(zero(FFlt), mdim, mdim); # buffer
     kappa_bargradNT = fill(zero(FFlt), mdim, nne); # buffer
     return dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix
+end
+
+function  _buffers2(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField{FFlt})
+    # Constants
+    fes = self.integdomain.fes
+    nfes = count(fes); # number of finite elements in the set
+    ndn = ndofs(temp); # number of degrees of freedom per node
+    nne = nodesperelem(fes); # number of nodes for element
+    sdim = ndofs(geom);   # number of space dimensions
+    mdim = manifdim(fes); # manifold dimension of the element
+    Kedim = ndn*nne;      # dimension of the element matrix
+    elmat = fill(zero(FFlt), Kedim, Kedim); # buffer
+    elvec = fill(zero(FFlt), Kedim); # buffer
+    elvecfix = fill(zero(FFlt), Kedim); # buffer
+    dofnums = fill(zero(FInt), Kedim); # buffer
+    loc = fill(zero(FFlt), 1, sdim); # buffer
+    J = fill(zero(FFlt), sdim, mdim); # buffer
+    # RmTJ = fill(zero(FFlt), mdim, mdim); # buffer
+    # gradN = fill(zero(FFlt), nne, mdim); # buffer
+    # kappa_bar = fill(zero(FFlt), mdim, mdim); # buffer
+    # kappa_bargradNT = fill(zero(FFlt), mdim, nne); # buffer
+    return dofnums, loc, J, elmat, elvec, elvecfix
 end
 
 """
@@ -265,6 +287,46 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
         end # Loop over quadrature points
     end # Loop over elements
     return idat; # return the updated inspector data
+end
+
+"""
+    capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
+
+Compute the capacity matrix.
+
+# Arguments
+- `self` = model machine,
+- `assembler` = matrix assembler
+- `geom` = geometry field,
+- `temp` = temperature field
+"""
+function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
+	fes = self.integdomain.fes
+	dofnums, loc, J, elmat, elvec, elvecfix = _buffers2(self, geom, temp)
+	# Precompute basis f. values + basis f. gradients wrt parametric coor
+	npts, Ns, gradNparams, w, pc  =  integrationdata(self.integdomain);
+	# Material
+	specific_heat  =  self.material.specific_heat;
+	startassembly!(assembler, size(elmat,1), size(elmat,2), count(fes),
+		temp.nfreedofs, temp.nfreedofs);
+	for i = 1:count(fes) # Loop over elements
+		fill!(elmat, 0.0); # Initialize element matrix
+		for j = 1:npts # Loop over quadrature points
+			locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+			Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
+			ffactor = Jac*specific_heat*w[j]
+			add_nnt_ut_only!(elmat, Ns[j], ffactor)
+		end # Loop over quadrature points
+		complete_lt!(elmat)
+		gatherdofnums!(temp, dofnums, fes.conn[i]);# retrieve degrees of freedom
+		assemble!(assembler, elmat, dofnums, dofnums);# assemble symmetric matrix
+	end # Loop over elements
+	return makematrix!(assembler);
+end
+
+function capacity(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FFlt})
+    assembler = SysmatAssemblerSparseSymm();
+    return capacity(self, assembler, geom, temp);
 end
 
 end
