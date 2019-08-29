@@ -69,13 +69,7 @@ function hill_decay_t3()
     true
 end
 
-function allrun()
-    println("#####################################################")
-    println("# hill_decay_t3 ")
-    hill_decay_t3()
-end # function allrun
-
-end # module hill_decay_examples
+end # module hill_decay_diffeq
 
 using .hill_decay_diffeq
 hill_decay_diffeq.hill_decay_t3()
