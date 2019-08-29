@@ -36,6 +36,17 @@ function MatHeatDiff(thermal_conductivity)
 end
 
 """
+    MatHeatDiff(thermal_conductivity, specific_heat)
+
+Construct material model for heat diffusion.
+
+Supply the matrix of thermal conductivity constants.
+"""
+function MatHeatDiff(thermal_conductivity, specific_heat)
+    return MatHeatDiff(thermal_conductivity, specific_heat, 0.0, tangentmoduli!, update!)
+end
+
+"""
     tangentmoduli!(self::MatHeatDiff, kappabar::FFltMat, t::FFlt, dt::FFlt, loc::FFltMat, label::FInt)
 
 Calculate the thermal conductivity matrix.
