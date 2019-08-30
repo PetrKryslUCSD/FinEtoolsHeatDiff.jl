@@ -9,9 +9,9 @@ function hill_decay_t3()
 	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
 	Width = 60.0
 	Height = 40.0
-	N = 60
+	N = 10
 	specific_heat = 1.0
-	theta = 1/2; # generalized trapezoidal method parameter
+	theta = 1.0; # generalized trapezoidal method parameter
 	dt = 2.0; # time step
 	tend = 200*dt; # length of the time interval
 	T0(x, y) = 500.0/(x^2+y^2+5);# Initial distribution of temperature
