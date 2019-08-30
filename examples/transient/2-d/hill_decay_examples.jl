@@ -12,7 +12,7 @@ function hill_decay_t3()
 	N = 10
 	specific_heat = 1.0
 	theta = 1.0; # generalized trapezoidal method parameter
-	dt = 2.0; # time step
+	dt = 0.2; # time step
 	tend = 200*dt; # length of the time interval
 	T0(x, y) = 500.0/(x^2+y^2+5);# Initial distribution of temperature
 	
@@ -38,7 +38,7 @@ function hill_decay_t3()
     cornerdof = Temp.dofnums[l1]
 
     material = MatHeatDiff(thermal_conductivity, specific_heat)
-    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
+    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(3)), material)
 
     K = conductivity(femm, geom, Temp)
     C = capacity(femm, geom, Temp)

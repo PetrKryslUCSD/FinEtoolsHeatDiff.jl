@@ -38,7 +38,7 @@ function hill_decay_t3()
     cornerdof = Temp.dofnums[l1]
 
     material = MatHeatDiff(thermal_conductivity, specific_heat)
-    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
+    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(3)), material)
 
     # The ODE to solve is C*dT/dt + K*T = 0
     K = conductivity(femm, geom, Temp)
@@ -49,7 +49,7 @@ function hill_decay_t3()
 	f(dT, T, p, t) = begin dT .= -(K * T); end
 	tspan = (0.0, tend)
 	prob = ODEProblem(f, Tn, tspan)
-	sol = solve(prob, ImplicitEuler(autodiff = false), mass_matrix = C, dt=dt, abstol=1.0e-2, reltol=1.0e-2)
+	sol = solve(prob, ImplicitEuler(autodiff = false), mass_matrix = C, abstol=1.0e-2, reltol=1.0e-2)
 	# @show sol
 
 	# This is postprocessing  to extract the data for the plot.

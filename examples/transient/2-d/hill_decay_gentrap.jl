@@ -38,7 +38,7 @@ function hill_decay_t3()
     cornerdof = Temp.dofnums[l1]
 
     material = MatHeatDiff(thermal_conductivity, specific_heat)
-    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
+    femm = FEMMHeatDiff(IntegDomain(fes, TriRule(3)), material)
 
     K = conductivity(femm, geom, Temp)
     C = capacity(femm, geom, Temp)
@@ -69,7 +69,7 @@ function hill_decay_t3()
 	    	dt = tend-t;
 	    end
 	end
-	
+
 	@show Corner_T
 	@show minimum(Corner_T), maximum(Corner_T)
 	plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
