@@ -49,7 +49,7 @@ function hill_decay_t3()
 	f(dT, T, p, t) = begin dT .= -(C \ (K * T)); end
 	tspan = (0.0, tend)
 	prob = ODEProblem(f, Tn, tspan)
-	sol = solve(prob, ImplicitEuler(autodiff = false))
+	sol = solve(prob, ImplicitEuler(autodiff = false), dt=dt)
 	# @show sol
 
 	# This is postprocessing  to extract the data for the plot.
