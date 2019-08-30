@@ -61,7 +61,7 @@ function hill_decay_t3()
 		push!(Corner_T, T[cornerdof][1])
 	end
 	
-	# @show Corner_T
+	@show Corner_T
 	@show minimum(Corner_T), maximum(Corner_T)
 	plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
 	display(plt)

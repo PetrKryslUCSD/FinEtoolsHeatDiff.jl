@@ -69,10 +69,11 @@ function hill_decay_t3()
 	    	dt = tend-t;
 	    end
 	end
-     
-     @show minimum(Corner_T), maximum(Corner_T)
-     plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
-     display(plt)
+	
+	@show Corner_T
+	@show minimum(Corner_T), maximum(Corner_T)
+	plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
+	display(plt)
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
 
