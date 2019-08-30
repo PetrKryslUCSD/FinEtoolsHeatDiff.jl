@@ -1,4 +1,4 @@
-module hill_decay_diffeq
+module hill_decay_diffeq_mass
 using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule    
@@ -46,10 +46,10 @@ function hill_decay_t3()
     
     Tn = gathersysvec(Temp)
     
-	f(dT, T, p, t) = begin dT .= -(C \ (K * T)); end
+	f(dT, T, p, t) = begin dT .= -(K * T); end
 	tspan = (0.0, tend)
 	prob = ODEProblem(f, Tn, tspan)
-	sol = solve(prob, ImplicitEuler(autodiff = false), dt=dt, abstol=1.0e-12, reltol=1.0e-12)
+	sol = solve(prob, ImplicitEuler(autodiff = false), mass_matrix = C, dt=dt, abstol=1.0e-2, reltol=1.0e-2)
 	# @show sol
 
 	# This is postprocessing  to extract the data for the plot.
@@ -69,7 +69,7 @@ function hill_decay_t3()
     true
 end
 
-end # module hill_decay_diffeq
+end # module hill_decay_diffeq_mass
 
-using .hill_decay_diffeq
-hill_decay_diffeq.hill_decay_t3()
+using .hill_decay_diffeq_mass
+hill_decay_diffeq_mass.hill_decay_t3()
