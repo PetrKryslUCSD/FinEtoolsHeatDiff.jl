@@ -2,7 +2,7 @@ module hill_decay_diffeq
 using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule    
-import LinearAlgebra: lu!
+import LinearAlgebra: cholesky
 using UnicodePlots
 using DifferentialEquations
 
@@ -10,7 +10,7 @@ function hill_decay_t3()
 	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
 	Width = 60.0
 	Height = 40.0
-	N = 10
+	N = 50
 	specific_heat = 1.0
 	dt = 2.0; # time step
 	tend = 20*dt; # length of the time interval
@@ -43,14 +43,17 @@ function hill_decay_t3()
     # The ODE to solve is C*dT/dt + K*T = 0
     K = conductivity(femm, geom, Temp)
     C = capacity(femm, geom, Temp)
+    CF = cholesky(C)
     
     Tn = gathersysvec(Temp)
     
-	f(dT, T, p, t) = begin dT .= -(C \ (K * T)); end
+    tstart = time()
+	f(dT, T, p, t) = begin dT .= -(CF \ (K * T)); end
 	tspan = (0.0, tend)
 	prob = ODEProblem(f, Tn, tspan)
-	sol = solve(prob, ImplicitEuler(autodiff = false), dt=dt, abstol=1.0e-2, reltol=1.0e-2)
+	sol = solve(prob, KenCarp4(autodiff = false), abstol=1.0e-4, reltol=1.0e-4)
 	# @show sol
+	println("Time = $(time() - tstart)")
 
 	# This is postprocessing  to extract the data for the plot.
 	ts = Float64[]
@@ -61,6 +64,7 @@ function hill_decay_t3()
 		push!(Corner_T, T[cornerdof][1])
 	end
 	
+	@show ts
 	@show Corner_T
 	@show minimum(Corner_T), maximum(Corner_T)
 	plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")

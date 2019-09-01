@@ -2,14 +2,15 @@ module hill_decay_gentrap
 using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule    
-import LinearAlgebra: cholesky
+import LinearAlgebra: cholesky, mul!
 using UnicodePlots
+using BenchmarkTools
 
 function hill_decay_t3()
 	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
 	Width = 60.0
 	Height = 40.0
-	N = 10
+	N = 50
 	specific_heat = 1.0
 	theta = 1.0; # generalized trapezoidal method parameter
 	dt = 2.0; # time step
@@ -42,13 +43,20 @@ function hill_decay_t3()
 
     K = conductivity(femm, geom, Temp)
     C = capacity(femm, geom, Temp)
-    
+
     A = cholesky((1/dt*C+theta*K))
     B = (1/dt*C-(1-theta)*K)
     
     Tn = gathersysvec(Temp)
     Tn1 = deepcopy(Tn)
 
+# Tn = rand(length(Tn))
+# dT = rand(length(Tn))
+
+#     @btime (mul!($dT, $K, $Tn); $dT .*= -1)
+#     @btime ($dT .= $K * $Tn)
+    
+    tstart = time()
     t = 0.0
     ts = Float64[t]
     @show Tn1[cornerdof, 1][1]
@@ -69,8 +77,9 @@ function hill_decay_t3()
 	    	dt = tend-t;
 	    end
 	end
+	println("Time = $(time() - tstart)")
 
-	@show Corner_T
+	# @show Corner_T
 	@show minimum(Corner_T), maximum(Corner_T)
 	plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
 	display(plt)
@@ -84,3 +93,5 @@ end # module hill_decay_gentrap
 
 using .hill_decay_gentrap
 hill_decay_gentrap.hill_decay_t3()
+
+
