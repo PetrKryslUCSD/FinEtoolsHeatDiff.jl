@@ -3506,7 +3506,7 @@ module hill_decay_gentrap
 using FinEtools
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtoolsHeatDiff.AlgoHeatDiffModule    
+using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky, mul!, lu, norm
 using Test
 function test()
@@ -3574,7 +3574,7 @@ function test()
 	end
 
 	# @show Corner_T
-	@show  norm(vec([minimum(Corner_T), maximum(Corner_T)]) - vec([(0.3831417624521073, 0.5031272242502393)...])) < 1.0e-6
+	@test  norm(vec([minimum(Corner_T), maximum(Corner_T)]) - vec([(0.3831417624521073, 0.5031272242502393)...])) < 1.0e-6
 	# plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
 	# display(plt)
 	# File =  "a.vtk"
