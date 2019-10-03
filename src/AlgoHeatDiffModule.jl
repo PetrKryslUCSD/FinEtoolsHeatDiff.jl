@@ -94,7 +94,7 @@ function steadystate(modeldata::FDataDict)
             if (temperature != nothing) # if it is nonzero,
                 if (typeof(temperature) <: Function) # it could be a function
                     for k = 1:length(fenids)
-                        T_fixed[k] = temperature(geom.values[fenids[k],:])[1];
+                        T_fixed[k] = temperature(geom.values[fenids[k],:]);
                     end
                 else # or it could be a constant
                     fill!(T_fixed, temperature);
@@ -150,7 +150,7 @@ function steadystate(modeldata::FDataDict)
             if ambient_temperature != nothing  # if given as nonzero
                 if (typeof(ambient_temperature) <: Function) # given by function
                     for k = 1:length(fenids)
-                        T_fixed[k] = ambient_temperature(geom.values[fenids[k],:])[1];
+                        T_fixed[k] = ambient_temperature(geom.values[fenids[k],:]);
                     end
                 else # it could be a constant
                     fill!(T_fixed, ambient_temperature);
