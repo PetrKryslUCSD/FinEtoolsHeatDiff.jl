@@ -1,7 +1,7 @@
 module Poisson_examples
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtoolsHeatDiff.AlgoHeatDiffModule    
+using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
 
 function Poisson_FE_example()
@@ -20,7 +20,8 @@ function Poisson_FE_example()
     A = 1.0 # dimension of the domain (length of the side of the square)
     thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
     Q = -6.0; # internal heat generation rate
-    tempf(x) = (1.0 .+ x[:,1].^2 .+ 2.0 .* x[:,2].^2);#the exact distribution of temperature
+    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
     N = 1000;# number of subdivisions along the sides of the square domain
 
 
@@ -39,6 +40,7 @@ function Poisson_FE_example()
     @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
     @time applyebc!(Temp)
     @time numberdofs!(Temp)
+    @show count(fes), count(fens)
 
     t1 = time()
 
@@ -70,10 +72,9 @@ function Poisson_FE_example()
 
     Error= 0.0
     for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(reshape(fens.xyz[k,:], (1,2)))[1])
+        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
     end
     println("Error =$Error")
-
 
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
@@ -85,7 +86,8 @@ function Poisson_FE_example_algo()
     A= 1.0
     thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
     magn = -6.0; #heat source
-    truetempf(x)=1.0 .+ x[1].^2 .+ 2.0 .* x[2].^2;
+    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempfa(x) = tempf(x...)
     N=20;
 
     println("""
@@ -109,7 +111,7 @@ function Poisson_FE_example_algo()
     l4  = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
 
     essential1 = FDataDict("node_list"=>vcat(l1, l2, l3, l4),
-    "temperature"=>truetempf);
+    "temperature"=>tempfa);
     material = MatHeatDiff(thermal_conductivity)
     femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
     region1 = FDataDict("femm"=>femm, "Q"=>magn)
@@ -129,7 +131,7 @@ function Poisson_FE_example_algo()
     femm=modeldata["regions"][1]["femm"]
 
     function errfh(loc,val)
-        exact = truetempf(loc)
+        exact = tempf(loc...)
         return ((exact[1]-val[1])*exact)
     end
     E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, m=3)
@@ -157,7 +159,8 @@ function Poisson_FE_example_csys_1()
     function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
         forceout[1] = Q; #heat source
     end
-    tempf(x) = (1.0 .+ x[:,1].^2 .+ 2.0 .* x[:,2].^2);#the exact distribution of temperature
+    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
     N = 1000;# number of subdivisions along the sides of the square domain
     Rm=[-0.9917568452513019 -0.12813414805267656
     -0.12813414805267656 0.9917568452513019]
@@ -205,7 +208,7 @@ function Poisson_FE_example_csys_1()
 
     Error= 0.0
     for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(reshape(fens.xyz[k,:], (1,2)))[1])
+        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
     end
     println("Error =$Error")
 
@@ -236,7 +239,8 @@ function Poisson_FE_Q4_example()
     function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
         forceout[1] = -6.0; #heat source
     end
-    tempf(x) = (1.0 .+ x[:,1].^2 .+ 2.0 .* x[:,2].^2);#the exact distribution of temperature
+    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
     N = 1000;
 
     println("Mesh generation")
@@ -289,7 +293,7 @@ function Poisson_FE_Q4_example()
 
     Error= 0.0
     for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(reshape(fens.xyz[k,:], (1,2)))[1])
+        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
     end
     println("Error =$Error")
 
