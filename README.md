@@ -83,6 +83,12 @@ Heat diffusion |   61     61
 
 ## Examples
 
+Activate and instantiate the environment:
+```
+using Pkg
+Pkg.activate("."); Pkg.instantiate()
+```
+
 There are a number of examples, which may
 be executed as described in the  [conceptual guide to
 `FinEtools`](https://petrkryslucsd.github.io/FinEtools.jl/latest).
