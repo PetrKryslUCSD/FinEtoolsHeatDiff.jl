@@ -12,7 +12,7 @@ function Poisson_FE_example()
     Unit square, with known temperature distribution along the boundary,
     and uniform heat generation rate inside.  Mesh of regular linear TRIANGLES,
     in a grid of 1000 x 1000 edges (2M triangles, 1M degrees of freedom).
-    Version: 05/29/2017
+    Version: 10/11/2019
     """
     )
     t0 = time()
@@ -23,7 +23,6 @@ function Poisson_FE_example()
     tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
     N = 1000;# number of subdivisions along the sides of the square domain
-
 
     println("Mesh generation")
     @time fens,fes =T3block(A, A, N, N)
@@ -37,7 +36,7 @@ function Poisson_FE_example()
     @time l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
     @time l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
     List = vcat(l1, l2, l3, l4)
-    @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    @time setebc!(Temp, List, true, 1, [tempf(geom.values[i,1], geom.values[i,2]) for i in List])
     @time applyebc!(Temp)
     @time numberdofs!(Temp)
     @show count(fes), count(fens)
@@ -148,7 +147,7 @@ function Poisson_FE_example_csys_1()
     and uniform heat generation rate inside.  Mesh of regular linear TRIANGLES,
     in a grid of 1000 x 1000 edges (2M triangles, 1M degrees of freedom).
     The material response is defined in a local coordinate system.
-    Version: 05/29/2017
+    Version: 10/11/2019
     """
     )
     t0 = time()
@@ -229,7 +228,7 @@ function Poisson_FE_Q4_example()
     Unit square, with known temperature distribution along the boundary,
     and uniform heat generation rate inside.  Mesh of regular four-node QUADRILATERALS,
     in a grid of 1000 x 1000 edges (1M quads, 1M degrees of freedom).
-    Version: 05/29/2017
+    Version: 10/11/2019
     """
     )
     t0 = time()
