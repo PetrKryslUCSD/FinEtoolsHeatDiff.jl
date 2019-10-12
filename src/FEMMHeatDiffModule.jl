@@ -53,6 +53,7 @@ function  _buffers1(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
     sdim = ndofs(geom);   # number of space dimensions
     mdim = manifdim(fes); # manifold dimension of the element
     Kedim = ndn*nne;      # dimension of the element matrix
+    ecoords = fill(zero(FFlt), nne, ndofs(geom)); # array of Element coordinates
     elmat = fill(zero(FFlt), Kedim, Kedim); # buffer
     elvec = fill(zero(FFlt), Kedim); # buffer
     elvecfix = fill(zero(FFlt), Kedim); # buffer
@@ -63,7 +64,7 @@ function  _buffers1(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
     gradN = fill(zero(FFlt), nne, mdim); # buffer
     kappa_bar = fill(zero(FFlt), mdim, mdim); # buffer
     kappa_bargradNT = fill(zero(FFlt), mdim, nne); # buffer
-    return dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix
+    return ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix
 end
 
 function  _buffers2(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField{FFlt})
@@ -75,6 +76,7 @@ function  _buffers2(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
     sdim = ndofs(geom);   # number of space dimensions
     mdim = manifdim(fes); # manifold dimension of the element
     Kedim = ndn*nne;      # dimension of the element matrix
+    ecoords = fill(zero(FFlt), nne, ndofs(geom)); # array of Element coordinates
     elmat = fill(zero(FFlt), Kedim, Kedim); # buffer
     elvec = fill(zero(FFlt), Kedim); # buffer
     elvecfix = fill(zero(FFlt), Kedim); # buffer
@@ -85,7 +87,7 @@ function  _buffers2(self::FEMMHeatDiff, geom::NodalField{FFlt}, temp::NodalField
     # gradN = fill(zero(FFlt), nne, mdim); # buffer
     # kappa_bar = fill(zero(FFlt), mdim, mdim); # buffer
     # kappa_bargradNT = fill(zero(FFlt), mdim, nne); # buffer
-    return dofnums, loc, J, elmat, elvec, elvecfix
+    return ecoords, dofnums, loc, J, elmat, elvec, elvecfix
 end
 
 """
@@ -103,14 +105,15 @@ function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     # Prepare assembler and buffers
-    dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat = _buffers1(self, geom, temp)
+    ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
     startassembly!(assembler, size(elmat,1), size(elmat,2), count(fes), temp.nfreedofs, temp.nfreedofs);
     for i = 1:count(fes) # Loop over elements
+        gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         fill!(elmat,  0.0); # Initialize element matrix
         for j=1:npts # Loop over quadrature points
-            locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+            locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
             At_mul_B!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
@@ -145,17 +148,18 @@ function nzebcloadsconductivity(self::FEMMHeatDiff, assembler::A,  geom::NodalFi
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     # Prepare assembler and buffers
-    dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
+    ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
     startassembly!(assembler,  temp.nfreedofs);
     # Now loop over all finite elements in the set
     for i = 1:count(fes) # Loop over elements
+        gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gatherfixedvalues_asvec!(temp, elvecfix, fes.conn[i]);# retrieve element coordinates
         if norm(elvecfix, Inf) != 0. # Is the load nonzero?
             fill!(elmat,  0.0);
             for j=1:npts # Loop over quadrature points
-                locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+                locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
                 Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
                 updatecsmat!(self.mcsys, loc, J, fes.label[i]);
                 At_mul_B!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
@@ -194,7 +198,7 @@ function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FF
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     # Prepare assembler and buffers
-    dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
+    ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
     gradT = fill(0.0, 1, size(gradN, 2))
@@ -202,9 +206,10 @@ function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FF
     energy = 0.0
     # Now loop over all finite elements in the set
     for i = 1:count(fes) # Loop over elements
+        gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gathervalues_asvec!(temp, elvec, fes.conn[i]);# retrieve element coordinates
         for j=1:npts # Loop over quadrature points
-            locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+            locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
             At_mul_B!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
@@ -243,7 +248,7 @@ The updated inspector data is returned.
 function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::NodalField{T}, temp::NodalField{FFlt}, felist::FIntVec, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, F<:Function}
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
-    dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
+    ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
     # Sort out  the output requirements
@@ -259,7 +264,6 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
     Te = fill(zero(FFlt), nodesperelem(fes)) # nodal temperatures -- buffer
     nne = nodesperelem(fes); # number of nodes for element
     sdim = ndofs(geom);            # number of space dimensions
-    xe = fill(zero(FFlt), nne, sdim); # array of node coordinates -- buffer
     qpgradT = fill(zero(FFlt), 1, sdim); # Temperature gradient -- buffer
     qpflux = fill(zero(FFlt), sdim); # thermal strain -- buffer
     out1 = fill(zero(FFlt), sdim); # output -- buffer
@@ -267,10 +271,10 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
     # Loop over  all the elements and all the quadrature points within them
     for ilist = 1:length(felist) # Loop over elements
         i = felist[ilist];
-        gathervalues_asmat!(geom, xe, fes.conn[i]);# retrieve element coords
+        gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gathervalues_asvec!(temp, Te, fes.conn[i]);# retrieve element temperatures
         for j = 1:npts # Loop over quadrature points
-            locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+            locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
             At_mul_B!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
@@ -283,7 +287,7 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
                 A_mul_B!(out, outputcsys.csmat, out1);# To output coord sys
             end
             # Call the inspector
-            idat = inspector(idat, i, fes.conn[i], xe, out, loc);
+            idat = inspector(idat, i, fes.conn[i], ecoords, out, loc);
         end # Loop over quadrature points
     end # Loop over elements
     return idat; # return the updated inspector data
@@ -302,7 +306,7 @@ Compute the capacity matrix.
 """
 function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
 	fes = self.integdomain.fes
-	dofnums, loc, J, elmat, elvec, elvecfix = _buffers2(self, geom, temp)
+	ecoords, dofnums, loc, J, elmat, elvec, elvecfix = _buffers2(self, geom, temp)
 	# Precompute basis f. values + basis f. gradients wrt parametric coor
 	npts, Ns, gradNparams, w, pc  =  integrationdata(self.integdomain);
 	# Material
@@ -310,9 +314,10 @@ function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  te
 	startassembly!(assembler, size(elmat,1), size(elmat,2), count(fes),
 		temp.nfreedofs, temp.nfreedofs);
 	for i = 1:count(fes) # Loop over elements
+        gathervalues_asmat!(geom, ecoords, fes.conn[i]);
 		fill!(elmat, 0.0); # Initialize element matrix
 		for j = 1:npts # Loop over quadrature points
-			locjac!(loc, J, geom.values, fes.conn[i], Ns[j], gradNparams[j])
+			locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
 			Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
 			ffactor = Jac*specific_heat*w[j]
 			add_nnt_ut_only!(elmat, Ns[j], ffactor)
