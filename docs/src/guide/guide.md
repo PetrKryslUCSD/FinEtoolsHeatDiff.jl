@@ -28,8 +28,9 @@ The machine for the boundary integrals can be used to compute:
 
 - Compute  the heat load vector for surface heat transfer.
 
-- Compute the heat load vector  corresponding to prescribed temperatures on the boundary  with surface heat transfer.
-moved up
+- Compute the heat load vector  corresponding to prescribed temperatures on the
+  boundary  with surface heat transfer. moved up
+
 ## Algorithms
 
 Solution procedures and other  common operations on FEM models  are expressed  in algorithms. Anything that algorithms can do,  the user of FinEtools  can do manually, but to use an algorithm is convenient.
@@ -39,3 +40,5 @@ Algorithms typically (not always) accept a single argument, `modeldata`, a dicti
 ### Heat diffusion algorithms
 
 There is an implementation of an algorithm for steady-state heat conduction.
+
+
