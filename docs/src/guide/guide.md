@@ -6,10 +6,10 @@ The [`FinEtools`](https://petrkryslucsd.github.io/FinEtools.jl/latest/index.html
 
 The package `FinEtoolsHeatDiff` has the following structure:
 
-- Top-level:
+- **Top-level**:
      `FinEtoolsHeatDiff` is the  top-level module.
 
-- Heat conduction: `AlgoHeatDiffModule` (algorithms), `FEMMHeatDiffModule`, `FEMMHeatDiffSurfModule`  (FEM machines  to evaluate  the  matrix and vector quantities), `MatHeatDiffModule`  (heat diffusion material)
+- **Heat conduction**: `AlgoHeatDiffModule` (algorithms), `FEMMHeatDiffModule`, `FEMMHeatDiffSurfModule`  (FEM machines  to evaluate  the  matrix and vector quantities), `MatHeatDiffModule`  (heat diffusion material)
 
 
 ##  Heat  conduction FEM machines
