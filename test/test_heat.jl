@@ -149,7 +149,7 @@ function test()
 
   # # Postprocessing
   # vtkexportmesh("annulusmod.vtk", fes.conn, [geom.values Temp.values],
-  # FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+  # FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 
   @test abs(minimum(Temp.values)-(-0.50124596))<1.0e-4
   @test abs(maximum(Temp.values)-(+0.50124596))<1.0e-4
@@ -526,11 +526,11 @@ function test()
   Temp = modeldata["temp"]
   regions = modeldata["regions"]
   vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.T6;
+  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
   scalars=[("Temperature", Temp.values)])
   try  rm("T4NAFEMS--T6.vtk"); catch end
   vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.T6)
+  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
   try rm("T4NAFEMS--T6--base.vtk"); catch end
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
@@ -706,11 +706,11 @@ function test()
   Temp = modeldata["temp"]
   regions = modeldata["regions"]
   vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.T3;
+  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T3;
   scalars=[("Temperature", Temp.values)])
   rm("T4NAFEMS--T3.vtk")
   vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.T3)
+  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T3)
   rm("T4NAFEMS--T3--base.vtk")
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
@@ -1370,7 +1370,7 @@ function test()
 
 
   l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-  setebc!(Temp, l1, 1; val=zero(FFlt))
+  setebc!(Temp, l1, 1, zero(FFlt))
   applyebc!(Temp)
 
   numberdofs!(Temp)
@@ -1402,7 +1402,7 @@ function test()
 
   File =  "annulusq8.vtk"
   vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
-  FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+  FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
   try rm(File); catch end
   # println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
   @test norm([minimum(Temp.values), maximum(Temp.values)]-[-0.5010001850658392, 0.5010001850658563]) < 1.0e-5
@@ -2037,7 +2037,7 @@ function test()
     # # Postprocessing
     # File = "annulusmod.vtk"
     # vtkexportmesh(File, fes.conn, [geom.values Temp.values],
-    # FinEtools.MeshExportModule.Q4; scalars=[("Temperature", Temp.values)])
+    # FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
     # @async run(`"paraview.exe" $File`)
 
 end
@@ -2315,11 +2315,11 @@ function test()
   Temp = modeldata["temp"]
   regions = modeldata["regions"]
   vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.T6;
+  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
   scalars=[("Temperature", Temp.values)])
   try  rm("T4NAFEMS--T6.vtk"); catch end
   vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.T6)
+  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
   try rm("T4NAFEMS--T6--base.vtk"); catch end
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
@@ -2434,7 +2434,7 @@ function test()
 
   # # Postprocessing
   # vtkexportmesh("annulusmod.vtk", fes.conn, [geom.values Temp.values],
-  # FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+  # FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 
   @test abs(minimum(Temp.values)-(-0.50124596))<1.0e-4
   @test abs(maximum(Temp.values)-(+0.50124596))<1.0e-4
@@ -2556,7 +2556,7 @@ mmmmPoiss_gaussrules.test()
 module mmPoiss_heatflux_1
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky
 function test()
@@ -2658,7 +2658,7 @@ mmPoiss_heatflux_1.test()
 module mmblock_heatflux_1
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2728,7 +2728,7 @@ mmblock_heatflux_1.test()
 module mmblock_heatflux_2
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2801,7 +2801,7 @@ mmblock_heatflux_2.test()
 module mmblock_heatflux_3
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2877,7 +2877,7 @@ mmblock_heatflux_3.test()
 module mmblock_heatflux_4
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2950,7 +2950,7 @@ mmblock_heatflux_4.test()
 module mmblock_Energy_2
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule: vtkexportmesh, T3, vtkexportvectors
+using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm, dot
 function test()
@@ -3070,7 +3070,7 @@ function test()
 
   # # Postprocessing
   # vtkexportmesh("annulusmod.vtk", fes.conn, [geom.values Temp.values],
-  # FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+  # FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 
   @test abs(minimum(Temp.values)-(-0.4963218516298991))<1.0e-4
   @test abs(maximum(Temp.values)-(+0.49632185162989910))<1.0e-4
@@ -3148,7 +3148,7 @@ function test()
 
   # # Postprocessing
   # vtkexportmesh("annulusmod.vtk", fes.conn, [geom.values Temp.values],
-  # FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+  # FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 
   @test abs(minimum(Temp.values)-(-0.5015861998449058))<1.0e-4
   @test abs(maximum(Temp.values)-(+0.5015861998449058))<1.0e-4
@@ -3199,7 +3199,7 @@ function test()
 
 
 	l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-	setebc!(EBCTemp, l1, 1; val=zero(FFlt))
+	setebc!(EBCTemp, l1, 1, zero(FFlt))
 	applyebc!(EBCTemp)
 
 	numberdofs!(EBCTemp)
@@ -3239,7 +3239,7 @@ function test()
 
 	File =  "annulusq8penalty.vtk"
 	vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
-		FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+		FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 	try rm(File); catch end
 	# println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 	@test norm([minimum(Temp.values), maximum(Temp.values)]-[-0.5010001850658392, 0.5010001850658563]) < 1.0e-5
@@ -3400,7 +3400,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1; val=zero(FFlt))
+    setebc!(Temp, l1, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -3462,7 +3462,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1; val=zero(FFlt))
+    setebc!(Temp, l1, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)
