@@ -7,9 +7,7 @@ module MatHeatDiffModule
 
 using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, FIntMat, FMat, FVec, FDataDict
 import FinEtools.MatModule: AbstractMat
-import LinearAlgebra: mul!, Transpose
-At_mul_B!(C, A, B) = mul!(C, Transpose(A), B)
-A_mul_B!(C, A, B) = mul!(C, A, B)
+using FinEtools.MatrixUtilityModule: mulCAB!
 
 """
     MatHeatDiff{MTAN<:Function, MUPD<:Function} <: AbstractMat
@@ -81,7 +79,7 @@ Update material state.
 function update!(self::MatHeatDiff, heatflux::FFltVec, output::FFltVec, gradT::FFltVec, t::FFlt= 0.0, dt::FFlt= 0.0, loc::FFltMat=reshape(FFlt[],0,0), label::FInt=0, quantity=:nothing)
 	sdim = size(self.thermal_conductivity, 2)
     @assert length(heatflux) == sdim
-    A_mul_B!(heatflux, self.thermal_conductivity, -gradT);
+    mulCAB!(heatflux, self.thermal_conductivity, -gradT);
     if quantity == :nothing
         #Nothing to be copied to the output array
     elseif quantity == :heatflux
