@@ -7,7 +7,10 @@ module MatHeatDiffModule
 
 using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, FIntMat, FMat, FVec, FDataDict
 import FinEtools.MatModule: AbstractMat
-using FinEtools.MatrixUtilityModule: mulCAB!
+using LinearAlgebra: Transpose, mul!
+
+mulCAtB!(C, A, B) = mul!(C, Transpose(A), B)
+mulCAB!(C, A, B) = mul!(C, A, B)
 
 """
     MatHeatDiff{MTAN<:Function, MUPD<:Function} <: AbstractMat

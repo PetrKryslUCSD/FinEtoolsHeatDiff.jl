@@ -522,16 +522,16 @@ function test()
   # println("$( resultsTempA  )")
 
   # Postprocessing
-  geom = modeldata["geom"]
-  Temp = modeldata["temp"]
-  regions = modeldata["regions"]
-  vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
-  scalars=[("Temperature", Temp.values)])
-  try  rm("T4NAFEMS--T6.vtk"); catch end
-  vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
-  try rm("T4NAFEMS--T6--base.vtk"); catch end
+  #geom = modeldata["geom"]
+  #Temp = modeldata["temp"]
+  #regions = modeldata["regions"]
+  #vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
+  #scalars=[("Temperature", Temp.values)])
+  #try  rm("T4NAFEMS--T6.vtk"); catch end
+  #vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
+  #try rm("T4NAFEMS--T6--base.vtk"); catch end
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
   # # results for the finest three meshes.
@@ -702,16 +702,16 @@ function test()
   # println("$( resultsTempA  )")
 
   # Postprocessing
-  geom = modeldata["geom"]
-  Temp = modeldata["temp"]
-  regions = modeldata["regions"]
-  vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T3;
-  scalars=[("Temperature", Temp.values)])
-  rm("T4NAFEMS--T3.vtk")
-  vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T3)
-  rm("T4NAFEMS--T3--base.vtk")
+  #geom = modeldata["geom"]
+  #Temp = modeldata["temp"]
+  #regions = modeldata["regions"]
+  #vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T3;
+  #scalars=[("Temperature", Temp.values)])
+  #rm("T4NAFEMS--T3.vtk")
+  #vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T3)
+  #rm("T4NAFEMS--T3--base.vtk")
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
   # # results for the finest three meshes.
@@ -1370,7 +1370,7 @@ function test()
 
 
   l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-  setebc!(Temp, l1, 1, zero(FFlt))
+  setebc!(Temp, l1, true, 1, zero(FFlt))
   applyebc!(Temp)
 
   numberdofs!(Temp)
@@ -1400,10 +1400,10 @@ function test()
 
   # println("Total time elapsed = ", time() - t0, "s")
 
-  File =  "annulusq8.vtk"
-  vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
-  FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
-  try rm(File); catch end
+  #File =  "annulusq8.vtk"
+  #vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
+  #FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
+  #try rm(File); catch end
   # println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
   @test norm([minimum(Temp.values), maximum(Temp.values)]-[-0.5010001850658392, 0.5010001850658563]) < 1.0e-5
   true
@@ -2311,16 +2311,16 @@ function test()
   # println("$( resultsTempA  )")
 
   # Postprocessing
-  geom = modeldata["geom"]
-  Temp = modeldata["temp"]
-  regions = modeldata["regions"]
-  vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
-  scalars=[("Temperature", Temp.values)])
-  try  rm("T4NAFEMS--T6.vtk"); catch end
-  vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-  [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
-  try rm("T4NAFEMS--T6--base.vtk"); catch end
+  #geom = modeldata["geom"]
+  #Temp = modeldata["temp"]
+  #regions = modeldata["regions"]
+  #vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
+  #scalars=[("Temperature", Temp.values)])
+  #try  rm("T4NAFEMS--T6.vtk"); catch end
+  #vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+  #[geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
+  #try rm("T4NAFEMS--T6--base.vtk"); catch end
   # ##
   # # Richardson extrapolation is used to estimate the true solution from the
   # # results for the finest three meshes.
@@ -2556,7 +2556,7 @@ mmmmPoiss_gaussrules.test()
 module mmPoiss_heatflux_1
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky
 function test()
@@ -2643,12 +2643,12 @@ function test()
   idat = inspectintegpoints(femm, geom, NodalField([1.0]), Temp, collect(1:count(fes)), inspector, (qplocs, qpfluxes), :heatflux)
 
 # Test export of vectors of heat flux
-  File =  "Poiss_heatflux_1-vectors.vtk"
-  vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
-  try rm(File); catch end
-  File =  "Poiss_heatflux_1.vtk"
-  vtkexportmesh(File, fes.conn, [geom.values Temp.values], T3; scalars=[("Temperature", Temp.values)])
-  try rm(File); catch end
+  #File =  "Poiss_heatflux_1-vectors.vtk"
+  #vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
+  #try rm(File); catch end
+  #File =  "Poiss_heatflux_1.vtk"
+  #vtkexportmesh(File, fes.conn, [geom.values Temp.values], T3; scalars=[("Temperature", Temp.values)])
+  #try rm(File); catch end
   true
 end
 end
@@ -2658,7 +2658,7 @@ mmPoiss_heatflux_1.test()
 module mmblock_heatflux_1
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2712,12 +2712,12 @@ function test()
   qplocs, qpfluxes, trueflux, fluxerror = idat
   @test fluxerror / length(qpfluxes) < 1.0e-9
 
-  File =  "mmblock_heatflux_1-vectors.vtk"
-  vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
-  try rm(File); catch end
-  File =  "mmblock_heatflux_1.vtk"
-  vtkexportmesh(File, fes.conn, [geom.values 0.0 .* Temp.values], T3; scalars=[("Temperature", Temp.values)])
-  try rm(File); catch end
+  #File =  "mmblock_heatflux_1-vectors.vtk"
+  #vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
+  #try rm(File); catch end
+  #File =  "mmblock_heatflux_1.vtk"
+  #vtkexportmesh(File, fes.conn, [geom.values 0.0 .* Temp.values], T3; scalars=[("Temperature", Temp.values)])
+  #try rm(File); catch end
 
   true
 end
@@ -2728,7 +2728,7 @@ mmblock_heatflux_1.test()
 module mmblock_heatflux_2
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2801,7 +2801,7 @@ mmblock_heatflux_2.test()
 module mmblock_heatflux_3
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2860,12 +2860,12 @@ function test()
   qplocs, qpfluxes, trueflux, fluxerror = idat
   @test fluxerror / length(qpfluxes) < 1.0e-9
 
-  File =  "mmblock_heatflux_2-vectors.vtk"
-  vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
-  try rm(File); catch end
-  File =  "mmblock_heatflux_2.vtk"
-  vtkexportmesh(File, fes.conn, [geom.values 0.0 .* Temp.values], T3; scalars=[("Temperature", Temp.values)])
-  try rm(File); catch end
+  #File =  "mmblock_heatflux_2-vectors.vtk"
+  #vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])
+  #try rm(File); catch end
+  #File =  "mmblock_heatflux_2.vtk"
+  #vtkexportmesh(File, fes.conn, [geom.values 0.0 .* Temp.values], T3; scalars=[("Temperature", Temp.values)])
+  #try rm(File); catch end
 
   true
 end
@@ -2877,7 +2877,7 @@ mmblock_heatflux_3.test()
 module mmblock_heatflux_4
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm
 function test()
@@ -2950,7 +2950,7 @@ mmblock_heatflux_4.test()
 module mmblock_Energy_2
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
+#using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
 import LinearAlgebra: cholesky, norm, dot
 function test()
@@ -3199,7 +3199,7 @@ function test()
 
 
 	l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-	setebc!(EBCTemp, l1, 1, zero(FFlt))
+	setebc!(EBCTemp, l1, true, 1, zero(FFlt))
 	applyebc!(EBCTemp)
 
 	numberdofs!(EBCTemp)
@@ -3237,10 +3237,10 @@ function test()
 
 	# println("Total time elapsed = ", time() - t0, "s")
 
-	File =  "annulusq8penalty.vtk"
-	vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
-		FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
-	try rm(File); catch end
+	#File =  "annulusq8penalty.vtk"
+	#vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values],
+	#	FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
+	#try rm(File); catch end
 	# println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 	@test norm([minimum(Temp.values), maximum(Temp.values)]-[-0.5010001850658392, 0.5010001850658563]) < 1.0e-5
 	true
@@ -3400,7 +3400,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    setebc!(Temp, l1, true, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -3462,7 +3462,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    setebc!(Temp, l1, true, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)

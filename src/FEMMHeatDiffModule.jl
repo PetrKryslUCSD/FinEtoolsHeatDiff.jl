@@ -17,9 +17,12 @@ import FinEtools.ElementalFieldModule: ElementalField
 import FinEtools.AssemblyModule: AbstractSysvecAssembler, AbstractSysmatAssembler, SysmatAssemblerSparseSymm, startassembly!, assemble!, makematrix!, makevector!, SysvecAssembler
 import FinEtools.ForceIntensityModule: ForceIntensity
 import FinEtools.FEMMBaseModule: AbstractFEMM, inspectintegpoints
-import FinEtools.MatrixUtilityModule: add_gkgt_ut_only!, complete_lt!, locjac!, add_nnt_ut_only!, mulCAtB!, mulCAB!
-import LinearAlgebra: norm, dot
+import FinEtools.MatrixUtilityModule: add_gkgt_ut_only!, complete_lt!, locjac!, add_nnt_ut_only!
+import LinearAlgebra: norm, dot, Transpose, mul!
 import FinEtoolsHeatDiff.MatHeatDiffModule: MatHeatDiff, tangentmoduli!, update!
+
+mulCAtB!(C, A, B) = mul!(C, Transpose(A), B)
+mulCAB!(C, A, B) = mul!(C, A, B)
 
 """
     FEMMHeatDiff{S<:AbstractFESet, F<:Function, M<:MatHeatDiff} <: AbstractFEMM
