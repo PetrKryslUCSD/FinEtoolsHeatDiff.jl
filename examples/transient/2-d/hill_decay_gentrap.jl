@@ -4,7 +4,7 @@ using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule    
 import LinearAlgebra: cholesky, mul!
 using UnicodePlots
-using BenchmarkTools
+# using BenchmarkTools
 
 function hill_decay_t3()
 	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
