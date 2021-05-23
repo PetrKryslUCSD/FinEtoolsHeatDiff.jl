@@ -3428,7 +3428,7 @@ function test()
 
     InnerProduct = FinEtools.FEMMBaseModule.innerproduct(femm,  geom,  Temp)
 
-    d,v,nev,nconv = eigs(InnerProduct; nev=7, which=:SM)
+    d,v,nconv = eigs(InnerProduct; nev=7, which=:SM)
     # # println("Smallest Eigenvalues: $(d)")
     @test abs(d[1] - 9.60413e-5) / 9.60413e-5 < 1.0e-6
 
@@ -3491,7 +3491,7 @@ function test()
     InnerProductM = FinEtools.FEMMBaseModule.innerproduct(femm, SysmatAssemblerSparseHRZLumpingSymm(), geom,  Temp)
     # # println("InnerProductM = $(InnerProductM)")
 
-    d,v,nev,nconv = eigs(InnerProductM; nev=7, which=:SM)
+    d,v,nconv = eigs(InnerProductM; nev=7, which=:SM)
     # # println("Smallest Eigenvalues: $(d)")
     @test abs(d[1] - 0.086911) / 0.086911 < 1.0e-6
 
