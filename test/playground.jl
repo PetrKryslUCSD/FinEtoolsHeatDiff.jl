@@ -1,10 +1,8 @@
-
-module mmmmPoiss_energy
+module mmmmPoiss_06122017
 using FinEtools
 using FinEtoolsHeatDiff
-using FinEtools.MeshExportModule
 using Test
-import LinearAlgebra: cholesky
+import LinearAlgebra: cholesky, Symmetric
 function test()
 
   # println("""
@@ -25,7 +23,8 @@ function test()
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
   end
-  N = 2;# number of subdivisions along the sides of the square domain
+  tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
+  N = 10;# number of subdivisions along the sides of the square domain
 
 
   # println("Mesh generation")
@@ -40,7 +39,7 @@ function test()
   l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
   l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
   List = vcat(l1, l2, l3, l4)
-  setebc!(Temp, List, true, 1, 0.0)
+  setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
   applyebc!(Temp)
   numberdofs!(Temp)
 
@@ -54,24 +53,35 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+  @show F2 = nzebcloadsconductivity(femm, geom, Temp);
   # println("Internal heat generation")
   # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
   fi = ForceIntensity(FFlt[Q]);
-  F1 = distribloads(femm, geom, Temp, fi, 3);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
 
+  # println("Factorization")
+  K = cholesky(Symmetric(K))
   # println("Solution of the factorized system")
   U = K\(F1+F2)
   scattersysvec!(Temp,U[:])
 
-#   File =  "a.vtk"
-#   MeshExportModule.vtkexportmesh(File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=[("Temperature", Temp.values)])
-  energ1 = transpose(U) * K * U
-  # println("energ1 = $(energ1)")
-  # @show e  = energy(femm, geom, Temp)
-  @test abs(energ1 - energy(femm, geom, Temp)) / energ1 < 1.0e-6
+  # println("Total time elapsed = $(time() - t0) [s]")
+  # println("Solution time elapsed = $(time() - t1) [s]")
+
+  Error= 0.0
+  for k=1:size(fens.xyz,1)
+    Error = Error.+abs.(Temp.values[k,1].-tempf(reshape(fens.xyz[k,:], (1,2))))
+  end
+  # println("Error =$Error")
+
+
+  # File =  "a.vtk"
+  # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
+
+  @test Error[1]<1.e-5
+
   true
 end
 end
-using .mmmmPoiss_energy
-mmmmPoiss_energy.test()
+using .mmmmPoiss_06122017
+mmmmPoiss_06122017.test()

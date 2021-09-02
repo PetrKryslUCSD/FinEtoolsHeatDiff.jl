@@ -2,7 +2,7 @@ module mmmmPoiss_06122017
 using FinEtools
 using FinEtoolsHeatDiff
 using Test
-import LinearAlgebra: cholesky
+import LinearAlgebra: cholesky, Symmetric
 function test()
 
   # println("""
@@ -60,7 +60,7 @@ function test()
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   # println("Factorization")
-  K = cholesky(K)
+  K = cholesky(Symmetric(K))
   # println("Solution of the factorized system")
   U = K\(F1+F2)
   scattersysvec!(Temp,U[:])
