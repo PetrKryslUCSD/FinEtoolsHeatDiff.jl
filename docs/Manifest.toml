@@ -17,6 +17,18 @@ version = "3.3.3"
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
+[[deps.Arpack]]
+deps = ["Arpack_jll", "Libdl", "LinearAlgebra", "Logging"]
+git-tree-sha1 = "91ca22c4b8437da89b030f08d71db55a379ce958"
+uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+version = "0.5.3"
+
+[[deps.Arpack_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg"]
+git-tree-sha1 = "5ba6c757e8feccf03a1554dfaf3e26b3cfc7fd5e"
+uuid = "68821587-b530-5797-8361-c406ea357684"
+version = "3.5.1+1"
+
 [[deps.ArrayInterface]]
 deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
 git-tree-sha1 = "81f0cb60dc994ca17f68d9fb7c942a5ae70d9ee4"
@@ -176,6 +188,12 @@ deps = ["DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorizatio
 git-tree-sha1 = "4f512780c4dbb5b72b0b582b4f1bb1fe7986c874"
 uuid = "91bb5406-6c9a-523d-811d-0644c4229550"
 version = "5.4.0"
+
+[[deps.FinEtoolsHeatDiff]]
+deps = ["Arpack", "FinEtools", "LinearAlgebra", "Profile", "SparseArrays", "Statistics", "Test"]
+git-tree-sha1 = "94fb5cd690f30f26861392a7a0a3c0fe911e64bf"
+uuid = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
+version = "1.1.0"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
@@ -420,6 +438,10 @@ version = "1.3.0"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.Profile]]
+deps = ["Printf"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
