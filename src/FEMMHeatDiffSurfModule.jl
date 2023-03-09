@@ -56,8 +56,8 @@ function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField
     dofnums = zeros(FInt, Hedim); # degree of freedom array -- used as a buffer
     loc = fill(zero(FFlt), 1, sdim); # quadrature point location -- used as a buffer
     J = fill(zero(FFlt), sdim, mdim); # Jacobian matrix -- used as a buffer
-    startassembly!(assembler, Hedim, Hedim, nfes, temp.nfreedofs, temp.nfreedofs);
-    for i = 1:nfes # Loop over elements
+    assembler, fesrange = startassembly!(assembler, Hedim, Hedim, nfes, temp.nfreedofs, temp.nfreedofs);
+    for i in fesrange # Loop over elements
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         fill!(He,  0.0); # Initialize element matrix
         for j=1:npts # Loop over quadrature points
@@ -111,8 +111,8 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
     loc = fill(zero(FFlt), 1, sdim); # quadrature point location -- used as a buffer
     J = fill(zero(FFlt), sdim, mdim); # Jacobian matrix -- used as a buffer
     pT = fill(zero(FFlt), Hedim);
-    startassembly!(assembler,  temp.nfreedofs);
-    for i = 1:nfes # Loop over elements
+    assembler, fesrange = startassembly!(assembler, count(fes), temp.nfreedofs);
+    for i in fesrange # Loop over elements
         gathervalues_asvec!(ambtemp, pT, fes.conn[i]);# retrieve ambient temp
         if norm(pT, Inf) != 0.0    # Is the load nonzero?
             gathervalues_asmat!(geom, ecoords, fes.conn[i]);
@@ -172,9 +172,9 @@ function nzebcsurfacetransferloads(self::FEMMHeatDiffSurf, assembler::A,  geom::
     loc = fill(zero(FFlt), 1, sdim); # quadrature point location -- used as a buffer
     J = fill(zero(FFlt), sdim, mdim); # Jacobian matrix -- used as a buffer
     pT = fill(zero(FFlt), Hedim);
-    startassembly!(assembler,  temp.nfreedofs);
+    assembler, fesrange = startassembly!(assembler, count(fes), temp.nfreedofs);
     # Now loop over all finite elements in the set
-    for i=1:nfes # Loop over elements
+    for i in fesrange # Loop over elements
         gatherfixedvalues_asvec!(temp, pT, fes.conn[i]);# retrieve element temp
         if norm(pT, Inf) != 0.0    # Is the load nonzero?
             gathervalues_asmat!(geom, ecoords, fes.conn[i]);
