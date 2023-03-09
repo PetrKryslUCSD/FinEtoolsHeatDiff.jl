@@ -31,7 +31,7 @@ function annulus_Q4_example()
 
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1; val=zero(FFlt))
+    setebc!(Temp, l1, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -62,7 +62,7 @@ function annulus_Q4_example()
     println("Total time elapsed = ", time() - t0, "s")
 
     File =  "annulus.vtk"
-    vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.Q4; scalars=[("Temperature", Temp.values)])
+    vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
     @async run(`"paraview.exe" $File`)
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
@@ -130,7 +130,7 @@ function annulus_Q4_example_algo()
     println("Total time elapsed = ",time() - t0,"s")
 
     # Postprocessing
-    vtkexportmesh("annulusmod.vtk", connasarray(fes), [geom.values Temp.values], FinEtools.MeshExportModule.Q4; scalars=[("Temperature", Temp.values)])
+    vtkexportmesh("annulusmod.vtk", connasarray(fes), [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
 
 end # annulus_Q4_example_algo
 
@@ -164,7 +164,7 @@ function annulus_Q8_example()
 
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1; val=zero(FFlt))
+    setebc!(Temp, l1, 1, zero(FFlt))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -195,7 +195,7 @@ function annulus_Q8_example()
     println("Total time elapsed = ", time() - t0, "s")
 
     File =  "annulusq8.vtk"
-    vtkexportmesh(File, connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.Q8; scalars=[("Temperature", Temp.values)])
+    vtkexportmesh(File, connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
@@ -259,8 +259,8 @@ function ebc_annulus_Q4_algo()
 
     # Postprocessing
     File = "annulusmod.vtk"
-    vtkexportmesh(File, connasarray(fes), [geom.values Temp.values],  FinEtools.MeshExportModule.Q4; scalars=[("Temperature", Temp.values)])
-    @async run(`"paraview.exe" $File`)
+    vtkexportmesh(File, connasarray(fes), [geom.values Temp.values],  FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
+    # @async run(`"paraview.exe" $File`)
 
 end # ebc_annulus_Q4_algo
 
@@ -279,4 +279,8 @@ function allrun()
     ebc_annulus_Q4_algo()
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module annulus_examples
+nothing

@@ -114,7 +114,7 @@ function actuator2()
     display(a)
 
     File =  "a.vtk"
-    MeshExportModule.vtkexportmesh(File, fens, fes; scalars =[("Temperature", Temp.values)])
+    MeshExportModule.VTK.vtkexportmesh(File, fens, fes; scalars =[("Temperature", Temp.values)])
     @async run(`"paraview.exe" $File`)
     true
 end # actuator2
@@ -126,4 +126,8 @@ function allrun()
     return true
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module actuator_examples
+nothing

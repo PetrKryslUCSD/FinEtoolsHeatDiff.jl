@@ -123,9 +123,9 @@ function T4NAFEMS_T3_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),  [geom.values Temp.values/100], FinEtools.MeshExportModule.T3;
+    vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T3;
     scalars=[("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.T3)
+    vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T3)
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the
@@ -296,9 +296,9 @@ function T4NAFEMS_T6_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values Temp.values/100], FinEtools.MeshExportModule.T6;
+    vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
     scalars=[("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.T6)
+    vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the
@@ -352,4 +352,8 @@ function allrun()
     T4NAFEMS_T6_algo()
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module T4NAFEMS_examples
+nothing

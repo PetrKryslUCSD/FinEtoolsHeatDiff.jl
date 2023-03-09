@@ -315,4 +315,8 @@ function allrun()
     Poisson_FE_Q4_example()
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module Poisson_examples
+nothing
