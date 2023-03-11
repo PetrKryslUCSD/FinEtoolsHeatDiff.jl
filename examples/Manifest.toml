@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "784df0106433669307739d73f37441599834e465"
+project_hash = "5d8d19ee5fed1322ed8c6c2867f10f8f5795dea3"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -97,6 +97,12 @@ deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
 git-tree-sha1 = "485193efd2176b88e6622a39a246f8c5b600e74e"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.6"
+
+[[deps.ChunkSplitters]]
+deps = ["TestItems"]
+git-tree-sha1 = "a111b98a36662bc1a4357bb1b99ed1919484dfb2"
+uuid = "ae650224-84b6-46f8-82ea-d812ca08434e"
+version = "0.1.2"
 
 [[deps.CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -246,7 +252,7 @@ version = "6.0.1"
 deps = ["Arpack", "FinEtools", "LinearAlgebra", "Profile", "REPLHistory", "Revise", "SparseArrays", "Statistics", "Test"]
 path = ".."
 uuid = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
-version = "1.1.0"
+version = "2.0.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -640,6 +646,11 @@ version = "0.1.1"
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[[deps.TestItems]]
+git-tree-sha1 = "8621ba2637b49748e2dc43ba3d84340be2938022"
+uuid = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
+version = "0.1.1"
 
 [[deps.ThreadingUtilities]]
 deps = ["ManualMemory"]

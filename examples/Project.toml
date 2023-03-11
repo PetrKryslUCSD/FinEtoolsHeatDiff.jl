@@ -1,6 +1,15 @@
 [deps]
+ChunkSplitters = "ae650224-84b6-46f8-82ea-d812ca08434e"
 FinEtools = "91bb5406-6c9a-523d-811d-0644c4229550"
 FinEtoolsHeatDiff = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
 REPLHistory = "a5566ce3-012c-4b09-85b8-62131f0c3f36"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
+
+[compat]
+ChunkSplitters ="^0.1"
+FinEtools ="^6.0"
+FinEtoolsHeatDiff ="^2.0"
+REPLHistory ="^0.2"
+Revise ="^3.5"
+UnicodePlots ="^3.4"
