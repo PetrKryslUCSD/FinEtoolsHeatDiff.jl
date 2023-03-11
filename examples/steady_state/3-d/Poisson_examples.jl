@@ -3,6 +3,7 @@ using FinEtools
 using FinEtools.AssemblyModule
 using FinEtools.MeshExportModule
 using FinEtoolsHeatDiff
+using ChunkSplitters
 
 function Poisson_FE_H20_example()
     println("""
@@ -245,7 +246,7 @@ function Poisson_FE_T4_example()
 
 end # Poisson_FE_T4_example
 
-function Poisson_FE_H20_thr_example()
+function Poisson_FE_H20_parass_example()
     # println("""
 
     # Heat conduction example described by Amuthan A. Ramabathiran
@@ -265,7 +266,7 @@ function Poisson_FE_H20_thr_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 30;# number of subdivisions along the sides of the square domain
+    N = 80 # number of subdivisions along the sides of the square domain
 
 
     println("Mesh generation")
@@ -295,17 +296,54 @@ function Poisson_FE_H20_thr_example()
 
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
 
+    function _update_buffer_range(elem_mat_nrows, elem_mat_ncols, range, iend)
+        buffer_length = elem_mat_nrows * elem_mat_ncols * length(range)
+        istart = iend + 1
+        iend = iend + buffer_length
+        buffer_range = istart:iend
+        return buffer_range, iend
+    end
+
+    function _task_local_assembler(a, buffer_range)
+        buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
+        matbuffer = view(a.matbuffer, buffer_range)
+        rowbuffer = view(a.rowbuffer, buffer_range)
+        colbuffer = view(a.colbuffer, buffer_range)
+        buffer_pointer = 1
+        matbuffer .= 0.0
+        rowbuffer .= 1
+        colbuffer .= 1
+        a1 = SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, false)
+    end
 
     println("Conductivity")
     nne = nodesperelem(fes)
-    @time begin
-        ass = AssemblyModule.SysmatAssemblerSparseThr(0.0)
-        startassembly!(ass, nne, nne, count(fes), Temp.nfreedofs, Temp.nfreedofs)
-        Base.Threads.@threads :static for th in 1:Base.Threads.nthreads()
-            conductivity(femm, ass, geom, Temp)
+
+    start = time()
+    a = SysmatAssemblerSparse(0.0)
+    elem_mat_nrows = nne
+    elem_mat_ncols = nne
+    elem_mat_nmatrices = count(fes)
+    ndofs_row = Temp.nfreedofs
+    ndofs_col = Temp.nfreedofs
+    startassembly!(a, elem_mat_nrows, elem_mat_ncols, elem_mat_nmatrices, ndofs_row, ndofs_col)
+    ntasks = Base.Threads.nthreads()
+    iend = 0;
+    @time Threads.@sync begin
+        for ch in chunks(1:count(fes), ntasks)
+            buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+            Threads.@spawn let r =  $ch[1]
+                femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
+                a1 = _task_local_assembler(a, $buffer_range)
+                conductivity(femm1, a1, geom, Temp)
+            end
         end
     end
-    @time K = makematrix!(ass)
+    a.buffer_pointer = iend
+    K = makematrix!(a)
+    @show time() - start
+    return true # short-circuit for assembly testing
+
     # @time K = conductivity(femm, geom, Temp)
     println("Nonzero EBC")
     @time F2 = nzebcloadsconductivity(femm, geom, Temp);
@@ -314,7 +352,6 @@ function Poisson_FE_H20_thr_example()
     fi = ForceIntensity(FFlt[Q]);
     @time F1 = distribloads(femm, geom, Temp, fi, 3);
 
-    # return true # short-circuit for assembly testing
 
     println("Solution of the system")
     @time U = K\(F1+F2)
@@ -330,7 +367,7 @@ function Poisson_FE_H20_thr_example()
     println("Error =$Error")
 
 
-    File =  "Poisson_FE_H20_thr_example.vtk"
+    File =  "Poisson_FE_H20_parass_example.vtk"
     MeshExportModule.VTK.vtkexportmesh(File, fes.conn, geom.values, MeshExportModule.VTK.H20; scalars=[("T", Temp.values, )])
 
     true
@@ -339,8 +376,8 @@ end # Poisson_FE_H20_example
 
 function allrun()
     println("#####################################################")
-    println("# Poisson_FE_H20_thr_example ")
-    Poisson_FE_H20_thr_example()
+    println("# Poisson_FE_H20_parass_example ")
+    Poisson_FE_H20_parass_example()
     println("#####################################################")
     println("# Poisson_FE_H20_example ")
     Poisson_FE_H20_example()

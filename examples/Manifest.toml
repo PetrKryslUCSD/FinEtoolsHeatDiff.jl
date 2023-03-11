@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "5d8d19ee5fed1322ed8c6c2867f10f8f5795dea3"
+project_hash = "e2a50e100b6838b8aa6bef2d417269c490aa1339"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -112,9 +112,9 @@ version = "0.1.11"
 
 [[deps.CodeTracking]]
 deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "4f619d394ac521dc59cb80a2cd8f78578e483a9d"
+git-tree-sha1 = "d57c99cc7e637165c81b30eb268eabe156a45c49"
 uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -241,12 +241,12 @@ uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.13.7"
 
 [[deps.FinEtools]]
-deps = ["DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorization", "Printf", "Random", "SparseArrays", "Statistics", "StatsBase", "SymRCM", "Test", "Unicode", "WriteVTK"]
-git-tree-sha1 = "82bb67d8baf06594f534199580d5fb5446e36ecb"
+deps = ["ChunkSplitters", "DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorization", "Printf", "Random", "SparseArrays", "Statistics", "StatsBase", "SymRCM", "Test", "Unicode", "WriteVTK"]
+git-tree-sha1 = "41a1f22125e382c387096eaa7b0492a32eb82d83"
 repo-rev = "main"
 repo-url = "https://github.com/PetrKryslUCSD/FinEtools.jl.git"
 uuid = "91bb5406-6c9a-523d-811d-0644c4229550"
-version = "6.0.1"
+version = "6.0.3"
 
 [[deps.FinEtoolsHeatDiff]]
 deps = ["Arpack", "FinEtools", "LinearAlgebra", "Profile", "REPLHistory", "Revise", "SparseArrays", "Statistics", "Test"]

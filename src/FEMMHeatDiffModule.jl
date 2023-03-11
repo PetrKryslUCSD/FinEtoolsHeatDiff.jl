@@ -105,8 +105,8 @@ function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},
     ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
-    assembler, fesrange = startassembly!(assembler, size(elmat)..., count(fes), temp.nfreedofs, temp.nfreedofs);
-    for i in fesrange # Loop over elements
+    startassembly!(assembler, size(elmat)..., count(fes), temp.nfreedofs, temp.nfreedofs);
+    for i in 1:count(fes) # Loop over elements
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         fill!(elmat,  0.0); # Initialize element matrix
         for j=1:npts # Loop over quadrature points
@@ -148,9 +148,9 @@ function nzebcloadsconductivity(self::FEMMHeatDiff, assembler::A,  geom::NodalFi
     ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
     # Thermal conductivity matrix is in local  material coordinates.
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
-    assembler, fesrange = startassembly!(assembler, count(fes), temp.nfreedofs);
+    startassembly!(assembler, temp.nfreedofs);
     # Now loop over all finite elements in the set
-    for i in fesrange # Loop over elements
+    for i in 1:count(fes) # Loop over elements
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gatherfixedvalues_asvec!(temp, elvecfix, fes.conn[i]);# retrieve element coordinates
         if norm(elvecfix, Inf) != 0. # Is the load nonzero?
@@ -308,9 +308,8 @@ function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},  te
 	npts, Ns, gradNparams, w, pc  =  integrationdata(self.integdomain);
 	# Material
 	specific_heat  =  self.material.specific_heat;
-	assembler, fesrange = startassembly!(assembler, size(elmat)..., count(fes),
-		temp.nfreedofs, temp.nfreedofs);
-	for i in fesrange # Loop over elements
+	startassembly!(assembler, size(elmat)..., count(fes), temp.nfreedofs, temp.nfreedofs);
+	for i in 1:count(fes) # Loop over elements
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
 		fill!(elmat, 0.0); # Initialize element matrix
 		for j = 1:npts # Loop over quadrature points
