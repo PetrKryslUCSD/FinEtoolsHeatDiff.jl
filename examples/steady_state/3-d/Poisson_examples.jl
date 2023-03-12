@@ -266,7 +266,7 @@ function Poisson_FE_H20_parass_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 80 # number of subdivisions along the sides of the square domain
+    N = 30 # number of subdivisions along the sides of the square domain
 
 
     println("Mesh generation")
@@ -310,14 +310,20 @@ function Poisson_FE_H20_parass_example()
         rowbuffer = view(a.rowbuffer, buffer_range)
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
-        matbuffer .= 0.0
-        rowbuffer .= 1
-        colbuffer .= 1
-        a1 = SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, false)
+        # Initialization not necessary: it has already been done for the entire buffer.
+        # matbuffer .= 0.0
+        # rowbuffer .= 1
+        # colbuffer .= 1
+        nomatrixresult = true
+        a1 = SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, nomatrixresult)
     end
 
     println("Conductivity")
     nne = nodesperelem(fes)
+
+    start = time()
+    K = conductivity(femm, geom, Temp)
+    @info "All done serial $(time() - start)"
 
     start = time()
     a = SysmatAssemblerSparse(0.0)
@@ -329,22 +335,27 @@ function Poisson_FE_H20_parass_example()
     startassembly!(a, elem_mat_nrows, elem_mat_ncols, elem_mat_nmatrices, ndofs_row, ndofs_col)
     ntasks = Base.Threads.nthreads()
     iend = 0;
-    @time Threads.@sync begin
+    Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
+            @info "$(ch[2]): Top of loop $(time() - start)"
             buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
-            Threads.@spawn let r =  $ch[1]
+            Threads.@spawn let r =  $ch[1], b = $buffer_range
                 femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
-                a1 = _task_local_assembler(a, $buffer_range)
+                a1 = _task_local_assembler(a, b)
+                @info "$(ch[2]): Before conductivity $(time() - start)"
                 conductivity(femm1, a1, geom, Temp)
+                @info "$(ch[2]): After conductivity $(time() - start)"
             end
+            @info "$(ch[2]): Bottom of loop $(time() - start)"
         end
     end
+    @info "After sync $(time() - start)"
     a.buffer_pointer = iend
     K = makematrix!(a)
-    @show time() - start
+    @info "All done $(time() - start)"
     return true # short-circuit for assembly testing
 
-    # @time K = conductivity(femm, geom, Temp)
+    # K = conductivity(femm, geom, Temp)
     println("Nonzero EBC")
     @time F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
