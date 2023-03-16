@@ -246,7 +246,7 @@ function Poisson_FE_T4_example()
 
 end # Poisson_FE_T4_example
 
-function Poisson_FE_H20_parass_example()
+function Poisson_FE_H20_parass_tasks_example()
     # println("""
 
     # Heat conduction example described by Amuthan A. Ramabathiran
@@ -257,7 +257,7 @@ function Poisson_FE_H20_parass_example()
     # Version: 06/03/2017
     # """
     # )
-    t0 = time()
+    @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
     thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
@@ -266,17 +266,14 @@ function Poisson_FE_H20_parass_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 30 # number of subdivisions along the sides of the square domain
+    N = 70 # number of subdivisions along the sides of the square domain
 
-
-    println("Mesh generation")
     fens,fes = H20block(A, A, A, N, N, N)
-    println("$(count(fes)) elements")
+    @info("$(count(fes)) elements")
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz,1),1))
 
-    println("Searching nodes  for BC")
     Tolerance = 1.0/N/100.0
     l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
     l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
@@ -289,8 +286,7 @@ function Poisson_FE_H20_parass_example()
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println( "Number of free degrees of freedom: $(Temp.nfreedofs)")
-    t1 = time()
+    @info( "Number of free degrees of freedom: $(Temp.nfreedofs)")
 
     material = MatHeatDiff(thermal_conductivity)
 
@@ -310,21 +306,23 @@ function Poisson_FE_H20_parass_example()
         rowbuffer = view(a.rowbuffer, buffer_range)
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
-        # Initialization not necessary: it has already been done for the entire buffer.
-        # matbuffer .= 0.0
-        # rowbuffer .= 1
-        # colbuffer .= 1
         nomatrixresult = true
-        a1 = SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, nomatrixresult)
+        return SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, nomatrixresult)
     end
 
-    println("Conductivity")
     nne = nodesperelem(fes)
 
+    @info("Conductivity: serial")
     start = time()
-    K = conductivity(femm, geom, Temp)
+    a = SysmatAssemblerSparse(0.0)
+    K = conductivity(femm, a, geom, Temp)
     @info "All done serial $(time() - start)"
+    K = nothing
+    a = nothing
+    GC.gc()
 
+
+    @info("Conductivity: parallel")
     start = time()
     a = SysmatAssemblerSparse(0.0)
     elem_mat_nrows = nne
@@ -337,58 +335,194 @@ function Poisson_FE_H20_parass_example()
     iend = 0;
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
-            @info "$(ch[2]): Top of loop $(time() - start)"
+            @info "$(ch[2]): Started $(time() - start)"
             buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
             Threads.@spawn let r =  $ch[1], b = $buffer_range
+                @info "$(ch[2]): Spawned $(time() - start)"
                 femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
-                a1 = _task_local_assembler(a, b)
-                @info "$(ch[2]): Before conductivity $(time() - start)"
-                conductivity(femm1, a1, geom, Temp)
-                @info "$(ch[2]): After conductivity $(time() - start)"
+                _a = _task_local_assembler(a, b)
+                @info "$(ch[2]): Started conductivity $(time() - start)"
+                conductivity(femm1, _a, geom, Temp)
+                @info "$(ch[2]): Finished $(time() - start)"
             end
-            @info "$(ch[2]): Bottom of loop $(time() - start)"
         end
     end
-    @info "After sync $(time() - start)"
+    @info "Started make-matrix $(time() - start)"
     a.buffer_pointer = iend
     K = makematrix!(a)
     @info "All done $(time() - start)"
+    @info "Short-circuited exit"
     return true # short-circuit for assembly testing
 
     # K = conductivity(femm, geom, Temp)
-    println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
-    println("Internal heat generation")
+
+    F2 = nzebcloadsconductivity(femm, geom, Temp);
+
     # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
 
 
-    println("Solution of the system")
-    @time U = K\(F1+F2)
+
+    U = K\(F1+F2)
     scattersysvec!(Temp, U[:])
-
-    println("Total time elapsed = $(time() - t0) [s]")
-    println("Solution time elapsed = $(time() - t1) [s]")
 
     Error= 0.0
     for k=1:size(fens.xyz,1)
         Error = Error + abs.(Temp.values[k,1] - tempf(reshape(fens.xyz[k,:], (1,3)))[1])
     end
-    println("Error =$Error")
+    @info("Error =$Error")
 
 
-    File =  "Poisson_FE_H20_parass_example.vtk"
+    File =  "Poisson_FE_H20_parass_tasks_example.vtk"
     MeshExportModule.VTK.vtkexportmesh(File, fes.conn, geom.values, MeshExportModule.VTK.H20; scalars=[("T", Temp.values, )])
 
     true
 
-end # Poisson_FE_H20_example
+end # Poisson_FE_H20_parass_tasks_example
+
+function Poisson_FE_H20_parass_threads_example()
+    # println("""
+
+    # Heat conduction example described by Amuthan A. Ramabathiran
+    # http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
+    # Unit cube, with known temperature distribution along the boundary,
+    # and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
+    # in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
+    # Version: 06/03/2017
+    # """
+    # )
+    @info "Starting"
+
+    A = 1.0 # dimension of the domain (length of the side of the square)
+    thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
+    Q = -6.0; # internal heat generation rate
+    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+        forceout[1] = Q; #heat source
+    end
+    tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
+    N = 70 # number of subdivisions along the sides of the square domain
+
+    fens,fes = H20block(A, A, A, N, N, N)
+    @info("$(count(fes)) elements")
+
+    geom = NodalField(fens.xyz)
+    Temp = NodalField(zeros(size(fens.xyz,1),1))
+
+    Tolerance = 1.0/N/100.0
+    l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
+    l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
+    l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
+    l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
+    l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
+    l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
+    List = vcat(l1, l2, l3, l4, l5, l6)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    applyebc!(Temp)
+    numberdofs!(Temp)
+
+    @info( "Number of free degrees of freedom: $(Temp.nfreedofs)")
+
+    material = MatHeatDiff(thermal_conductivity)
+
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
+
+    function _update_buffer_range(elem_mat_nrows, elem_mat_ncols, range, iend)
+        buffer_length = elem_mat_nrows * elem_mat_ncols * length(range)
+        istart = iend + 1
+        iend = iend + buffer_length
+        buffer_range = istart:iend
+        return buffer_range, iend
+    end
+
+    function _task_local_assembler(a, buffer_range)
+        buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
+        matbuffer = view(a.matbuffer, buffer_range)
+        rowbuffer = view(a.rowbuffer, buffer_range)
+        colbuffer = view(a.colbuffer, buffer_range)
+        buffer_pointer = 1
+        nomatrixresult = true
+        return SysmatAssemblerSparse(buffer_length, matbuffer, rowbuffer, colbuffer, buffer_pointer, ndofs_row, ndofs_col, nomatrixresult)
+    end
+
+    nne = nodesperelem(fes)
+
+    @info("Conductivity: serial")
+    start = time()
+    a = SysmatAssemblerSparse(0.0)
+    K = conductivity(femm, a, geom, Temp)
+    @info "All done serial $(time() - start)"
+    K = nothing
+    a = nothing
+    GC.gc()
+
+    @info("Conductivity: parallel")
+    start = time()
+    a = SysmatAssemblerSparse(0.0)
+    elem_mat_nrows = nne
+    elem_mat_ncols = nne
+    elem_mat_nmatrices = count(fes)
+    ndofs_row = Temp.nfreedofs
+    ndofs_col = Temp.nfreedofs
+    @time startassembly!(a, elem_mat_nrows, elem_mat_ncols, elem_mat_nmatrices, ndofs_row, ndofs_col)
+    @info "Creating thread structures $(time() - start)"
+    ntasks = Base.Threads.nthreads()
+    _a = []
+    _r = []
+    iend = 0;
+    for ch in chunks(1:count(fes), ntasks)
+        buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+      @time  push!(_a, _task_local_assembler(a, buffer_range))
+     @time   push!(_r, ch[1])
+    end
+    @info "Finished $(time() - start)"
+    Threads.@threads for th in eachindex(_a)
+        @info "$(th): Started $(time() - start)"
+        femm1 = FEMMHeatDiff(IntegDomain(subset(fes, _r[th]), GaussRule(3, 3)), material)
+        conductivity(femm1, _a[th], geom, Temp)
+        @info "$(th): Finished $(time() - start)"
+    end
+    @info "Started make-matrix $(time() - start)"
+    a.buffer_pointer = iend
+    K = makematrix!(a)
+    @info "All done $(time() - start)"
+    @info "Short-circuited exit"
+    return true # short-circuit for assembly testing
+
+    # K = conductivity(femm, geom, Temp)
+
+    F2 = nzebcloadsconductivity(femm, geom, Temp);
+
+    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
+    fi = ForceIntensity(FFlt[Q]);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
+
+
+
+    U = K\(F1+F2)
+    scattersysvec!(Temp, U[:])
+
+    Error= 0.0
+    for k=1:size(fens.xyz,1)
+        Error = Error + abs.(Temp.values[k,1] - tempf(reshape(fens.xyz[k,:], (1,3)))[1])
+    end
+    @info("Error =$Error")
+
+
+    File =  "Poisson_FE_H20_parass_threads_example.vtk"
+    MeshExportModule.VTK.vtkexportmesh(File, fes.conn, geom.values, MeshExportModule.VTK.H20; scalars=[("T", Temp.values, )])
+
+    true
+
+end # Poisson_FE_H20_parass_threads_example
 
 function allrun()
     println("#####################################################")
-    println("# Poisson_FE_H20_parass_example ")
-    Poisson_FE_H20_parass_example()
+    println("# Poisson_FE_H20_parass_tasks_example ")
+    Poisson_FE_H20_parass_tasks_example()
+    println("#####################################################")
+    println("# Poisson_FE_H20_parass_threads_example ")
+    Poisson_FE_H20_parass_threads_example()
     println("#####################################################")
     println("# Poisson_FE_H20_example ")
     Poisson_FE_H20_example()
