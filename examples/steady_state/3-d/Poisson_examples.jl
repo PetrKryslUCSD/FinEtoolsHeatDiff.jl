@@ -29,23 +29,23 @@ function Poisson_FE_H20_example()
 
 
     println("Mesh generation")
-    @time fens,fes = H20block(A, A, A, N, N, N)
+    fens,fes = H20block(A, A, A, N, N, N)
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz,1),1))
 
     println("Searching nodes  for BC")
     Tolerance = 1.0/N/100.0
-    @time l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
-    @time l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
-    @time l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
-    @time l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
-    @time l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
-    @time l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
+    l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
+    l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
+    l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
+    l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
+    l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
+    l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
     List = vcat(l1, l2, l3, l4, l5, l6)
-    @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
-    @time applyebc!(Temp)
-    @time numberdofs!(Temp)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    applyebc!(Temp)
+    numberdofs!(Temp)
 
     println( "Number of free degrees of freedom: $(Temp.nfreedofs)")
     t1 = time()
@@ -56,16 +56,16 @@ function Poisson_FE_H20_example()
 
 
     println("Conductivity")
-    @time K = conductivity(femm, geom, Temp)
+    K = conductivity(femm, geom, Temp)
     println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
+    F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
 
     println("Solution of the system")
-    @time U = K\(F1+F2)
+    U = K\(F1+F2)
     scattersysvec!(Temp,U[:])
 
     println("Total time elapsed = $(time() - t0) [s]")
@@ -110,23 +110,23 @@ function Poisson_FE_T10_example()
 
 
     println("Mesh generation")
-    @time fens,fes = H20block(A, A, A, N, N, N)
+    fens,fes = H20block(A, A, A, N, N, N)
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz,1),1))
 
     println("Searching nodes  for BC")
     Tolerance = 1.0/N/100.0
-    @time l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
-    @time l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
-    @time l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
-    @time l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
-    @time l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
-    @time l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
+    l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
+    l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
+    l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
+    l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
+    l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
+    l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
     List = vcat(l1, l2, l3, l4, l5, l6)
-    @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
-    @time applyebc!(Temp)
-    @time numberdofs!(Temp)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    applyebc!(Temp)
+    numberdofs!(Temp)
 
     println( "Number of free degrees of freedom: $(Temp.nfreedofs)")
     t1 = time()
@@ -137,16 +137,16 @@ function Poisson_FE_T10_example()
 
 
     println("Conductivity")
-    @time K = conductivity(femm, geom, Temp)
+    K = conductivity(femm, geom, Temp)
     println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
+    F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
 
     println("Solution of the system")
-    @time U = K\(F1+F2)
+    U = K\(F1+F2)
     scattersysvec!(Temp,U[:])
 
     println("Total time elapsed = $(time() - t0) [s]")
@@ -180,7 +180,7 @@ function Poisson_FE_T4_example()
     N = 30;# number of subdivisions along the sides of the square domain
 
     println("Mesh generation")
-    @time fens,fes = T4block(A, A, A, N, N, N)
+    fens,fes = T4block(A, A, A, N, N, N)
 
     println("""
     Heat conduction example described by Amuthan A. Ramabathiran
@@ -197,16 +197,16 @@ function Poisson_FE_T4_example()
 
     println("Searching nodes  for BC")
     Tolerance = 1.0/N/100.0
-    @time l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
-    @time l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
-    @time l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
-    @time l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
-    @time l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
-    @time l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
+    l1 = selectnode(fens; box=[0. 0. 0. A 0. A], inflate = Tolerance)
+    l2 = selectnode(fens; box=[A A 0. A 0. A], inflate = Tolerance)
+    l3 = selectnode(fens; box=[0. A 0. 0. 0. A], inflate = Tolerance)
+    l4 = selectnode(fens; box=[0. A A A 0. A], inflate = Tolerance)
+    l5 = selectnode(fens; box=[0. A 0. A 0. 0.], inflate = Tolerance)
+    l6 = selectnode(fens; box=[0. A 0. A A A], inflate = Tolerance)
     List = vcat(l1, l2, l3, l4, l5, l6)
-    @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
-    @time applyebc!(Temp)
-    @time numberdofs!(Temp)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    applyebc!(Temp)
+    numberdofs!(Temp)
 
     println( "Number of free degrees of freedom: $(Temp.nfreedofs)")
     t1 = time()
@@ -217,16 +217,16 @@ function Poisson_FE_T4_example()
 
 
     println("Conductivity")
-    @time K = conductivity(femm, geom, Temp)
+    K = conductivity(femm, geom, Temp)
     println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
+    F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    F1 = distribloads(femm, geom, Temp, fi, 3);
 
     println("Solution of the system")
-    @time U = K\(F1+F2)
+    U = K\(F1+F2)
     scattersysvec!(Temp,U[:])
 
     println("Total time elapsed = $(time() - t0) [s]")
@@ -266,7 +266,7 @@ function Poisson_FE_H20_parass_tasks_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70 # number of subdivisions along the sides of the square domain
+    N = 30 # number of subdivisions along the sides of the square domain
 
     fens,fes = H20block(A, A, A, N, N, N)
     @info("$(count(fes)) elements")
@@ -351,8 +351,8 @@ function Poisson_FE_H20_parass_tasks_example()
     a.buffer_pointer = iend
     K = makematrix!(a)
     @info "All done $(time() - start)"
-    @info "Short-circuited exit"
-    return true # short-circuit for assembly testing
+    # @info "Short-circuited exit"
+    # return true # short-circuit for assembly testing
 
     # K = conductivity(femm, geom, Temp)
 
@@ -401,7 +401,7 @@ function Poisson_FE_H20_parass_threads_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70 # number of subdivisions along the sides of the square domain
+    N = 30 # number of subdivisions along the sides of the square domain
 
     fens,fes = H20block(A, A, A, N, N, N)
     @info("$(count(fes)) elements")
@@ -464,7 +464,7 @@ function Poisson_FE_H20_parass_threads_example()
     elem_mat_nmatrices = count(fes)
     ndofs_row = Temp.nfreedofs
     ndofs_col = Temp.nfreedofs
-    @time startassembly!(a, elem_mat_nrows, elem_mat_ncols, elem_mat_nmatrices, ndofs_row, ndofs_col)
+    startassembly!(a, elem_mat_nrows, elem_mat_ncols, elem_mat_nmatrices, ndofs_row, ndofs_col)
     @info "Creating thread structures $(time() - start)"
     ntasks = Base.Threads.nthreads()
     _a = []
@@ -472,8 +472,8 @@ function Poisson_FE_H20_parass_threads_example()
     iend = 0;
     for ch in chunks(1:count(fes), ntasks)
         buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
-      @time  push!(_a, _task_local_assembler(a, buffer_range))
-     @time   push!(_r, ch[1])
+        push!(_a, _task_local_assembler(a, buffer_range))
+        push!(_r, ch[1])
     end
     @info "Finished $(time() - start)"
     Threads.@threads for th in eachindex(_a)
@@ -486,8 +486,8 @@ function Poisson_FE_H20_parass_threads_example()
     a.buffer_pointer = iend
     K = makematrix!(a)
     @info "All done $(time() - start)"
-    @info "Short-circuited exit"
-    return true # short-circuit for assembly testing
+    # @info "Short-circuited exit"
+    # return true # short-circuit for assembly testing
 
     # K = conductivity(femm, geom, Temp)
 
