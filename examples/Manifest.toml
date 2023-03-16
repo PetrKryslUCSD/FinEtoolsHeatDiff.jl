@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "e2a50e100b6838b8aa6bef2d417269c490aa1339"
+project_hash = "837ac83eeefc5ad6be88bc86353c8171f6a5f769"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -100,9 +100,9 @@ version = "0.1.6"
 
 [[deps.ChunkSplitters]]
 deps = ["TestItems"]
-git-tree-sha1 = "a111b98a36662bc1a4357bb1b99ed1919484dfb2"
+git-tree-sha1 = "4903a742a100d128904a8c50b800ca1cf52d3f04"
 uuid = "ae650224-84b6-46f8-82ea-d812ca08434e"
-version = "0.1.2"
+version = "0.1.5"
 
 [[deps.CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -242,14 +242,12 @@ version = "0.13.7"
 
 [[deps.FinEtools]]
 deps = ["ChunkSplitters", "DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorization", "Printf", "Random", "SparseArrays", "Statistics", "StatsBase", "SymRCM", "Test", "Unicode", "WriteVTK"]
-git-tree-sha1 = "41a1f22125e382c387096eaa7b0492a32eb82d83"
-repo-rev = "main"
-repo-url = "https://github.com/PetrKryslUCSD/FinEtools.jl.git"
+git-tree-sha1 = "aa6585ac7f6648b4d5251e51a0994438571051d6"
 uuid = "91bb5406-6c9a-523d-811d-0644c4229550"
-version = "6.0.3"
+version = "6.0.10"
 
 [[deps.FinEtoolsHeatDiff]]
-deps = ["Arpack", "FinEtools", "LinearAlgebra", "Profile", "REPLHistory", "Revise", "SparseArrays", "Statistics", "Test"]
+deps = ["Arpack", "FinEtools", "LinearAlgebra", "REPLHistory", "Revise", "SparseArrays", "Statistics", "Test"]
 path = ".."
 uuid = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
 version = "2.0.0"
@@ -406,9 +404,9 @@ version = "0.1.8"
 
 [[deps.MarchingCubes]]
 deps = ["SnoopPrecompile", "StaticArrays"]
-git-tree-sha1 = "55aaf3fdf414b691a15875cfe5edb6e0daf4625a"
+git-tree-sha1 = "b198463d1a631e8771709bc8e011ba329da9ad38"
 uuid = "299715c1-40a9-479a-aaf9-4a633d36f717"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.Markdown]]
 deps = ["Base64"]
@@ -502,10 +500,6 @@ version = "1.3.0"
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
-[[deps.Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -586,15 +580,15 @@ version = "2.2.0"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "d0435ba43ab5ad1cbb5f0d286ca4ba67029ed3ee"
+git-tree-sha1 = "69cbee848ff3f3b4fe1dbf17991a84e286284607"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.8.4"
+version = "0.8.5"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "2d7d9e1ddadc8407ffd460e24218e37ef52dd9a3"
+git-tree-sha1 = "6aa098ef1012364f2ede6b17bf358c7f1fbe90d4"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.16"
+version = "1.5.17"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
