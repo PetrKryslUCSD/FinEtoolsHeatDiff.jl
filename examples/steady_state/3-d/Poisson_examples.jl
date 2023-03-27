@@ -1,3 +1,12 @@
+"""
+Heat conduction example described by Amuthan A. Ramabathiran
+http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
+Unit cube, with known temperature distribution along the boundary,
+and uniform heat generation rate inside.
+Version: 03/03/2023
+"""
+
+
 module Poisson_examples
 using FinEtools
 using FinEtools.AssemblyModule
@@ -11,15 +20,10 @@ include("adhoc_assembler.jl")
 include("dict_assembler.jl")
 include("sparspak_assembler.jl")
 
-function Poisson_FE_H20_example()
+function Poisson_FE_H20_example(N = 25)
     println("""
-
-    Heat conduction example described by Amuthan A. Ramabathiran
-    http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    Unit cube, with known temperature distribution along the boundary,
-    and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    Version: 06/03/2017
+    Mesh of regular QUADRATIC HEXAHEDRA, in a grid of $N x $N x $N edges.
+    Version: 03/03/2023
     """
     )
     t0 = time()
@@ -31,8 +35,6 @@ function Poisson_FE_H20_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70;# number of subdivisions along the sides of the square domain
-
 
     println("Mesh generation")
     fens,fes = H20block(A, A, A, N, N, N)
@@ -92,17 +94,13 @@ function Poisson_FE_H20_example()
 end # Poisson_FE_H20_example
 
 
-function Poisson_FE_T10_example()
+function Poisson_FE_T10_example(N = 25)
     println("""
+        Mesh of regular QUADRATIC TETRAHEDRA, in a grid of $N x $N x $N edges.
+        Version: 03/03/2023
+        """
+        )
 
-    Heat conduction example described by Amuthan A. Ramabathiran
-    http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    Unit cube, with known temperature distribution along the boundary,
-    and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    Version: 06/03/2017
-    """
-    )
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -112,11 +110,11 @@ function Poisson_FE_T10_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature
-    N = 70;# number of subdivisions along the sides of the square domain
+
 
 
     println("Mesh generation")
-    fens,fes = H20block(A, A, A, N, N, N)
+    fens,fes = T10block(A, A, A, N, N, N)
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz,1),1))
@@ -139,7 +137,7 @@ function Poisson_FE_T10_example()
 
     material = MatHeatDiff(thermal_conductivity)
 
-    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
+    femm = FEMMHeatDiff(IntegDomain(fes, TetRule(4)), material)
 
 
     println("Conductivity")
@@ -173,7 +171,12 @@ function Poisson_FE_T10_example()
 end # Poisson_FE_T10_example
 
 
-function Poisson_FE_T4_example()
+function Poisson_FE_T4_example(N = 25)
+    println("""
+        Mesh of regular LINEAR TETRAHEDRA, in a grid of $N x $N x $N edges.
+        Version: 03/03/2023
+        """
+        )
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -183,7 +186,7 @@ function Poisson_FE_T4_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature
-    N = 70;# number of subdivisions along the sides of the square domain
+
 
     println("Mesh generation")
     fens,fes = T4block(A, A, A, N, N, N)
@@ -192,9 +195,9 @@ function Poisson_FE_T4_example()
     Heat conduction example described by Amuthan A. Ramabathiran
     http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
     Unit cube, with known temperature distribution along the boundary,
-    and uniform heat generation rate inside.  Mesh of regular quadratic TETRAHEDRA,
-    in a grid of $(N) x $(N) x $(N) edges ($(count(fens)) degrees of freedom).
-    Version: 07/03/2017
+    and uniform heat generation rate inside.  Mesh of regular LINEAR TETRAHEDRA,
+    in a grid of $(N) x $(N) x $(N) edges ($(count(fens)) nodes).
+    Version: 03/03/2023
     """
     )
 
@@ -252,17 +255,7 @@ function Poisson_FE_T4_example()
 
 end # Poisson_FE_T4_example
 
-function Poisson_FE_H20_parass_tasks_example()
-    # println("""
-
-    # Heat conduction example described by Amuthan A. Ramabathiran
-    # http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    # Unit cube, with known temperature distribution along the boundary,
-    # and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    # in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    # Version: 06/03/2017
-    # """
-    # )
+function Poisson_FE_H20_parass_tasks_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -272,7 +265,6 @@ function Poisson_FE_H20_parass_tasks_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70 # number of subdivisions along the sides of the square domain
 
     fens,fes = H20block(A, A, A, N, N, N)
     @info("$(count(fes)) elements")
@@ -396,17 +388,7 @@ function Poisson_FE_H20_parass_tasks_example()
 
 end # Poisson_FE_H20_parass_tasks_example
 
-function Poisson_FE_H20_parass_threads_example()
-    # println("""
-
-    # Heat conduction example described by Amuthan A. Ramabathiran
-    # http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    # Unit cube, with known temperature distribution along the boundary,
-    # and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    # in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    # Version: 06/03/2017
-    # """
-    # )
+function Poisson_FE_H20_parass_threads_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -416,7 +398,6 @@ function Poisson_FE_H20_parass_threads_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70 # number of subdivisions along the sides of the square domain
 
     fens,fes = H20block(A, A, A, N, N, N)
     @info("$(count(fes)) elements")
@@ -537,17 +518,7 @@ function Poisson_FE_H20_parass_threads_example()
 
 end # Poisson_FE_H20_parass_threads_example
 
-function Poisson_FE_H8_parass_threads_example()
-    # println("""
-
-    # Heat conduction example described by Amuthan A. Ramabathiran
-    # http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    # Unit cube, with known temperature distribution along the boundary,
-    # and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    # in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    # Version: 06/03/2017
-    # """
-    # )
+function Poisson_FE_H8_parass_threads_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -557,7 +528,6 @@ function Poisson_FE_H8_parass_threads_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature1
-    N = 70 # number of subdivisions along the sides of the square domain
 
     fens,fes = H8block(A, A, A, N, N, N)
     @info("$(count(fes)) elements")
@@ -678,7 +648,7 @@ function Poisson_FE_H8_parass_threads_example()
 
 end # Poisson_FE_H20_parass_threads_example
 
-function Poisson_FE_T4_altass_example()
+function Poisson_FE_T4_altass_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -688,20 +658,9 @@ function Poisson_FE_T4_altass_example()
         forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 + 2.0 .* x[:,2].^2);#the exact distribution of temperature
-    N = 70;# number of subdivisions along the sides of the square domain
 
     println("Mesh generation")
     fens,fes = T4block(A, A, A, N, N, N)
-
-    println("""
-    Heat conduction example described by Amuthan A. Ramabathiran
-    http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
-    Unit cube, with known temperature distribution along the boundary,
-    and uniform heat generation rate inside.  Mesh of regular quadratic TETRAHEDRA,
-    in a grid of $(N) x $(N) x $(N) edges ($(count(fens)) degrees of freedom).
-    Version: 07/03/2017
-    """
-    )
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz,1),1))
@@ -797,6 +756,8 @@ function allrun()
     println("#####################################################")
     println("# Poisson_FE_T4_example ")
     Poisson_FE_T4_example()
+    println("# Poisson_FE_T4_altass_example ")
+    Poisson_FE_T4_altass_example()
 end # function allrun
 
 @info "All examples may be executed with "
