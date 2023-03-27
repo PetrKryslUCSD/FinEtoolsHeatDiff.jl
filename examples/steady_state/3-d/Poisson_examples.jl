@@ -5,9 +5,11 @@ using FinEtools.MeshExportModule
 using FinEtoolsHeatDiff
 using ChunkSplitters
 using DataDrop
+using SparseArrays: lu
 
 include("adhoc_assembler.jl")
 include("dict_assembler.jl")
+include("sparspak_assembler.jl")
 
 function Poisson_FE_H20_example()
     println("""
@@ -726,14 +728,24 @@ function Poisson_FE_T4_altass_example()
 
 
     println("Conductivity")
-    ass = SysmatAssemblerSparse(0.0, true)
+    # ass = AssemblyModule.SysmatAssemblerSparse(0.0, true)
+    # @time     K = conductivity(femm, ass, geom, Temp)
+    # ass.nomatrixresult = false
+    # @time K = makematrix!(ass)
+
+    # ass = SysmatAssemblerSparseDict(0.0, true)
+    # @time     K = conductivity(femm, ass, geom, Temp)
+    # ass.nomatrixresult = false
+    # @time K = makematrix!(ass)
+
+    ass = SysmatAssemblerSparspak(0.0, true)
     @time     K = conductivity(femm, ass, geom, Temp)
     ass.nomatrixresult = false
     @time K = makematrix!(ass)
-    ass = SysmatAssemblerSparseDict(0.0, true)
-    @time     K = conductivity(femm, ass, geom, Temp)
-    ass.nomatrixresult = false
-    @time K = makematrix!(ass)
+
+    # @warn "Short circuit exit"
+    # return
+
     println("Nonzero EBC")
     F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
@@ -742,7 +754,14 @@ function Poisson_FE_T4_altass_example()
     F1 = distribloads(femm, geom, Temp, fi, 3);
 
     println("Solution of the system")
-    U = K\(F1+F2)
+    # U = K\(F1+F2)
+
+    # @time fact = lu(K)
+    # @time U = fact \ (F1+F2)
+
+    solve!(K, (F1+F2))
+    U = K.p.x
+
     scattersysvec!(Temp,U[:])
 
     println("Total time elapsed = $(time() - t0) [s]")

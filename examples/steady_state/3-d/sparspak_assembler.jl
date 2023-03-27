@@ -1,9 +1,13 @@
 using SparseArrays
 import FinEtools.AssemblyModule: AbstractSysmatAssembler, startassembly!, assemble!, makematrix!
-# using SimplySparse
+using Sparspak
+using Sparspak.SpkProblem: Problem, inaij!
+using Sparspak.SpkSparseSolver: SparseSolver, inmatrix!, findorder!, symbolicfactor!
+using Sparspak.SparseSolver: SparseSolver, solve!
+using MKL
 
 """
-    SysmatAssemblerSparseAdHoc{IT, MBT, IBT} <: AbstractSysmatAssembler
+    SysmatAssemblerSparspak{IT, MBT, IBT} <: AbstractSysmatAssembler
 
 Type for assembling a sparse global matrix from elementwise matrices.
 
@@ -12,19 +16,15 @@ Type for assembling a sparse global matrix from elementwise matrices.
     All fields of the datatype are private. The type is manipulated by the
     functions `startassembly!`, `assemble!`, and `makematrix!`.
 """
-mutable struct SysmatAssemblerSparseAdHoc{IT, MBT, IBT} <: AbstractSysmatAssembler
-    buffer_length::IT
-    matbuffer::MBT
-    rowbuffer::IBT
-    colbuffer::IBT
-    buffer_pointer::IT
+mutable struct SysmatAssemblerSparspak{IT, FT} <: AbstractSysmatAssembler
+    problem::Problem{IT, FT}
     ndofs_row::IT
     ndofs_col::IT
     nomatrixresult::Bool
 end
 
 """
-    SysmatAssemblerSparseAdHoc(z= zero(FFlt), nomatrixresult = false)
+    SysmatAssemblerSparspak(z= zero(FFlt), nomatrixresult = false)
 
 Construct blank system matrix assembler.
 
@@ -39,7 +39,7 @@ the assembler.
 
 This is how a sparse matrix is assembled from two rectangular dense matrices.
 ```
-    a = SysmatAssemblerSparseAdHoc(0.0)
+    a = SysmatAssemblerSparspak(0.0)
     startassembly!(a, 5, 5, 3, 7, 7)
     m = [0.24406   0.599773    0.833404  0.0420141
         0.786024  0.00206713  0.995379  0.780298
@@ -56,7 +56,7 @@ This is how a sparse matrix is assembled from two rectangular dense matrices.
 
 When the `nomatrixresult` is set as true, no matrix is produced.
 ```
-    a = SysmatAssemblerSparseAdHoc(0.0, true)
+    a = SysmatAssemblerSparspak(0.0, true)
     startassembly!(a, 5, 5, 3, 7, 7)
     m = [0.24406   0.599773    0.833404  0.0420141
         0.786024  0.00206713  0.995379  0.780298
@@ -80,13 +80,13 @@ At this point all the buffers of the assembler have been cleared, and
 `makematrix!(a) ` is no longer possible.
 
 """
-function SysmatAssemblerSparseAdHoc(z= zero(FFlt), nomatrixresult = false)
-    return SysmatAssemblerSparseAdHoc(0, FFlt[z], FInt[0], FInt[0], 0, 0, 0, nomatrixresult)
+function SysmatAssemblerSparspak(z= zero(FFlt), nomatrixresult = false)
+    return SysmatAssemblerSparspak(Problem(0, 0, 2500, z), 0, 0, nomatrixresult)
 end
 
 """
     startassembly!(
-        self::SysmatAssemblerSparseAdHoc,
+        self::SysmatAssemblerSparspak,
         elem_mat_nrows,
         elem_mat_ncols,
         elem_mat_nmatrices,
@@ -119,7 +119,7 @@ dimensions on input. Otherwise, the buffers are left completely untouched.
     are meaningful numbers. Beware!
 """
 function startassembly!(
-    self::SysmatAssemblerSparseAdHoc,
+    self::SysmatAssemblerSparspak,
     elem_mat_nrows,
     elem_mat_ncols,
     elem_mat_nmatrices,
@@ -128,20 +128,14 @@ function startassembly!(
     force_init = false
 )
     # Only resize the buffers if the pointer is less than 1
-    if self.buffer_pointer < 1
-        self.buffer_length = elem_mat_nmatrices * elem_mat_nrows * elem_mat_ncols
-        resize!(self.rowbuffer, self.buffer_length)
-        resize!(self.colbuffer, self.buffer_length)
-        resize!(self.matbuffer, self.buffer_length)
-        self.buffer_pointer = 1
+    if self.ndofs_col < 1 || self.ndofs_row < 1
         self.ndofs_row = ndofs_row
         self.ndofs_col = ndofs_col
+        self.problem = Problem(self.ndofs_row, self.ndofs_col, elem_mat_nrows * self.ndofs_col, zero(eltype(self.problem.rhs)))
     end
     # Leave the buffers uninitialized, unless the user requests otherwise
     if force_init
-        self.rowbuffer .= 1
-        self.colbuffer .= 1
-        self.matbuffer .= 0
+
     end
 
     return self
@@ -149,7 +143,7 @@ end
 
 """
     assemble!(
-        self::SysmatAssemblerSparseAdHoc,
+        self::SysmatAssemblerSparspak,
         mat::MT,
         dofnums_row::IT,
         dofnums_col::IT,
@@ -158,7 +152,7 @@ end
 Assemble a rectangular matrix.
 """
 function assemble!(
-    self::SysmatAssemblerSparseAdHoc,
+    self::SysmatAssemblerSparspak,
     mat::MT,
     dofnums_row::IT,
     dofnums_col::IT,
@@ -168,64 +162,33 @@ function assemble!(
     # equation numbers for the rows and columns.
     nrows = length(dofnums_row)
     ncolumns = length(dofnums_col)
-    p = self.buffer_pointer
-    @assert p + ncolumns * nrows <= self.buffer_length + 1
     @assert size(mat) == (nrows, ncolumns)
     @inbounds for j in 1:ncolumns
         if 0 < dofnums_col[j] <= self.ndofs_col
+            c = dofnums_col[j]
             for i in 1:nrows
+                r = dofnums_row[i]
                 if 0 < dofnums_row[i] <= self.ndofs_row
-                    self.matbuffer[p] = mat[i, j] # serialized matrix
-                    self.rowbuffer[p] = dofnums_row[i]
-                    self.colbuffer[p] = dofnums_col[j]
-                    p = p + 1
+                    inaij!(self.problem, r, c, mat[i, j])
                 end
             end
         end
     end
-    self.buffer_pointer = p
     return self
 end
 
 """
-    makematrix!(self::SysmatAssemblerSparseAdHoc)
+    makematrix!(self::SysmatAssemblerSparspak)
 
 Make a sparse matrix.
 """
-function makematrix!(self::SysmatAssemblerSparseAdHoc)
-    @assert length(self.rowbuffer) >= self.buffer_pointer - 1
-    @assert length(self.colbuffer) >= self.buffer_pointer - 1
-    # We have the option of retaining the assembled results, but not
-    # constructing the sparse matrix.
-    if self.nomatrixresult
-        # Dummy (zero) sparse matrix is returned. The entire result of the
-        # assembly is preserved in the assembler buffers. The ends of the
-        # buffers are filled with illegal (ignorable) values.
-        self.rowbuffer[self.buffer_pointer:end] .= 0
-        self.colbuffer[self.buffer_pointer:end] .= 0
-        self.matbuffer[self.buffer_pointer:end] .= 0.0
-        return spzeros(self.ndofs_row, self.ndofs_col)
+function makematrix!(self::SysmatAssemblerSparspak{IT, FT}) where {IT, FT}
+    @info "in makematrix!"
+    s = SparseSolver(self.problem)
+    if !self.nomatrixresult
+        # @time     findorder!(s) || ErrorException("Finding Order.")
+        # @time     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
+        # @time     inmatrix!(s) || ErrorException("Matrix input.")
     end
-    # Compact the buffers by deleting ignorable rows and columns.
-    p = 1
-    for j in 1:self.buffer_pointer-1
-        if self.rowbuffer[j] > 0 && self.colbuffer[j] > 0
-            self.rowbuffer[p] = self.rowbuffer[j]
-            self.colbuffer[p] = self.colbuffer[j]
-            self.matbuffer[p] = self.matbuffer[j]
-            p += 1
-        end
-    end
-    self.buffer_pointer = p
-    # The sparse matrix is constructed and returned. The  buffers used for
-    # the assembly are cleared.
-    @time S = sparse(
-        view(self.rowbuffer, 1:self.buffer_pointer-1),
-        view(self.colbuffer, 1:self.buffer_pointer-1),
-        view(self.matbuffer, 1:self.buffer_pointer-1),
-        self.ndofs_row,
-        self.ndofs_col,
-        )
-    self = SysmatAssemblerSparseAdHoc(zero(eltype(self.matbuffer)))# get rid of the buffers
-    return S
+    return s
 end

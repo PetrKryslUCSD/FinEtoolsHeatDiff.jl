@@ -1,6 +1,6 @@
 using SparseArrays
 import FinEtools.AssemblyModule: AbstractSysmatAssembler, startassembly!, assemble!, makematrix!
-using SimplySparse
+
 
 """
     SysmatAssemblerSparseDict{IT, MBT, IBT} <: AbstractSysmatAssembler
