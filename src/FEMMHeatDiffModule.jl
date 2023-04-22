@@ -10,7 +10,7 @@ using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, F
 import FinEtools.FENodeSetModule: FENodeSet
 import FinEtools.FESetModule: AbstractFESet, nodesperelem, manifdim, gradN!
 import FinEtools.IntegDomainModule: IntegDomain, integrationdata, Jacobianvolume
-import FinEtools.CSysModule: CSys, updatecsmat!
+import FinEtools.CSysModule: CSys, updatecsmat!, csmat
 import FinEtools.FieldModule: ndofs, gatherdofnums!, gatherfixedvalues_asvec!, gathervalues_asvec!, gathervalues_asmat!
 import FinEtools.NodalFieldModule: NodalField
 import FinEtools.ElementalFieldModule: ElementalField
@@ -113,7 +113,7 @@ function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{FFlt},
             locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
-            mulCAtB!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
+            mulCAtB!(RmTJ,  csmat(self.mcsys),  J); # local Jacobian matrix
             gradN!(fes, gradN, gradNparams[j], RmTJ);
             # Add the product gradN*kappa_bar*gradNT*(Jac*w[j])
             add_gkgt_ut_only!(elmat, gradN, (Jac*w[j]), kappa_bar, kappa_bargradNT)
@@ -159,7 +159,7 @@ function nzebcloadsconductivity(self::FEMMHeatDiff, assembler::A,  geom::NodalFi
                 locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
                 Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
                 updatecsmat!(self.mcsys, loc, J, fes.label[i]);
-                mulCAtB!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
+                mulCAtB!(RmTJ, csmat(self.mcsys), J); # local Jacobian matrix
                 gradN!(fes, gradN, gradNparams[j], RmTJ);
                 # Add the product gradN*kappa_bar*gradNT*(Jac*w[j])
                 add_gkgt_ut_only!(elmat, gradN, (Jac*w[j]), kappa_bar, kappa_bargradNT)
@@ -209,7 +209,7 @@ function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FF
             locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
-            mulCAtB!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
+            mulCAtB!(RmTJ,  csmat(self.mcsys),  J); # local Jacobian matrix
             gradN!(fes, gradN, gradNparams[j], RmTJ);
             mulCAtB!(gradT, reshape(elvec, length(elvec), 1), gradN)
            	mulCAB!(fluxT, kappa_bar, reshape(gradT, length(gradT), 1))
@@ -274,14 +274,14 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
             locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
             updatecsmat!(self.mcsys, loc, J, fes.label[i]);
-            mulCAtB!(RmTJ,  self.mcsys.csmat,  J); # local Jacobian matrix
+            mulCAtB!(RmTJ,  csmat(self.mcsys),  J); # local Jacobian matrix
             gradN!(fes, gradN, gradNparams[j], RmTJ);
             # Quadrature point quantities
             mulCAB!(qpgradT, reshape(Te, 1, :), gradN); # temperature gradient in material coordinates
             out = update!(self.material, qpflux, out, vec(qpgradT), 0.0, 0.0, loc, fes.label[i], quantity)
             if (quantity == :heatflux)   # Transform heat flux vector,  if that is "out"
-                mulCAB!(out1, transpose(self.mcsys.csmat), out);# To global coord sys
-                mulCAB!(out, outputcsys.csmat, out1);# To output coord sys
+                mulCAB!(out1, transpose(csmat(self.mcsys)), out);# To global coord sys
+                mulCAB!(out, csmat(outputcsys), out1);# To output coord sys
             end
             # Call the inspector
             idat = inspector(idat, i, fes.conn[i], ecoords, out, loc);
