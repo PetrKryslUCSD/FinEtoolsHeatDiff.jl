@@ -22,12 +22,12 @@ import LinearAlgebra: norm, dot
 import FinEtoolsHeatDiff.MatHeatDiffModule: MatHeatDiff, tangentmoduli!, update!
 
 """
-    FEMMHeatDiff{S<:AbstractFESet, F<:Function, M<:MatHeatDiff} <: AbstractFEMM
+    FEMMHeatDiff{ID<:IntegDomain, M<:MatHeatDiff} <: AbstractFEMM
 
 Type for heat diffusion finite element modeling machine.
 """
-mutable struct FEMMHeatDiff{S<:AbstractFESet, F<:Function, M<:MatHeatDiff} <: AbstractFEMM
-    integdomain::IntegDomain{S, F} # geometry data
+mutable struct FEMMHeatDiff{ID<:IntegDomain, M<:MatHeatDiff} <: AbstractFEMM
+    integdomain::ID # geometry data
     mcsys::CSys # updater of the material orientation matrix
     material::M # material object
 end

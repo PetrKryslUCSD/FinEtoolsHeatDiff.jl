@@ -22,8 +22,8 @@ import LinearAlgebra: norm, dot, cross
 
     Type for heat diffusion finite element modeling machine for boundary integrals.
 """
-mutable struct FEMMHeatDiffSurf{S<:AbstractFESet, F<:Function} <: AbstractFEMM
-    integdomain::IntegDomain{S, F} # geometry data
+mutable struct FEMMHeatDiffSurf{ID<:IntegDomain} <: AbstractFEMM
+    integdomain::ID # geometry data
     surfacetransfercoeff::FFlt # material object
 end
 
@@ -72,9 +72,9 @@ function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField
     return makematrix!(assembler);
 end
 
-function surfacetransfer(self::FEMMHeatDiffSurf{S},
-                                   geom::NodalField{FFlt},
-                                   temp::NodalField{FFlt}) where {S<:AbstractFESet}
+function surfacetransfer(self::FEMMHeatDiffSurf,
+   geom::NodalField{FFlt},
+   temp::NodalField{FFlt})
     assembler = SysmatAssemblerSparseSymm()
     return  surfacetransfer(self, assembler, geom, temp);
 end
