@@ -3,7 +3,7 @@ using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule    
 import LinearAlgebra: cholesky
-using UnicodePlots
+using PlotlyLight
 
 function hill_decay_t3()
 	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
@@ -71,7 +71,12 @@ function hill_decay_t3()
 	end
      
      @show minimum(Corner_T), maximum(Corner_T)
-     plt = lineplot(vec(ts), vec(Corner_T), canvas = DotCanvas, title = "Transient temperature at the corner", name = "T", xlabel = "Time", ylabel = "T")
+
+     plt = PlotlyLight.Plot()
+     plt(x = vec(ts), y = vec(Corner_T))
+     plt.layout.xaxis.title = "x"
+     plt.layout.yaxis.title = "T"
+
      display(plt)
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
@@ -85,4 +90,8 @@ function allrun()
     hill_decay_t3()
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module hill_decay_examples
+nothing
