@@ -2,7 +2,7 @@ module actuator_examples
 using FinEtools
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
-using UnicodePlots
+using PlotlyLight
 
 function actuator2()
     # MEMS actuator.   Thermal analysis.
@@ -109,9 +109,13 @@ function actuator2()
     # },
     # Plot(Table([:x => y_o[ixo], :y => T_o[ixo]])), LegendEntry("cold leg"),
     # Plot(Table([:x => y_i[ixi], :y => T_i[ixi]])), LegendEntry("hot leg"))
-    a = lineplot(y_o[ixo], T_o[ixo], name = "cold leg", ylim = [0, 1400])
-    a = lineplot!(a, y_i[ixi], T_i[ixi], color = :red, name = "hot leg")
-    display(a)
+
+    lc = PlotlyLight.Config(x = vec(y_o[ixo]), y = vec(T_o[ixo]), name = "cold leg", color= "rgb(0, 128, 191)")
+    lh = PlotlyLight.Config(x = vec(y_i[ixi]), y = vec(T_i[ixi]), name = "hot leg", color= "rgb(200, 18, 91)", mode="lines+markers")
+    plt = PlotlyLight.Plot([lc, lh])
+    plt.layout.xaxis.title = "x"
+    plt.layout.yaxis.title = "T"
+    display(plt)
 
     File =  "a.vtk"
     MeshExportModule.VTK.vtkexportmesh(File, fens, fes; scalars =[("Temperature", Temp.values)])

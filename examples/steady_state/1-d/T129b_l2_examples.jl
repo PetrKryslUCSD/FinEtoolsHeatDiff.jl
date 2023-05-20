@@ -3,7 +3,7 @@ using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using LinearAlgebra: cholesky
-using UnicodePlots
+using PlotlyLight
 
 function T129b_l2_uq()
     L = 6.0;
@@ -44,14 +44,18 @@ function T129b_l2_uq()
 
     println("maximum(U)-0.1102 = $(maximum(U)-0.1102)")
 
-    a = lineplot(vec(geom.values), vec(Temp.values), title = "Temperature Plot", xlabel = "x", ylabel = "T")
+    plt = PlotlyLight.Plot()
+    plt(x = vec(geom.values), y = vec(Temp.values))
+    plt.layout.xaxis.title = "x"
+    plt.layout.yaxis.title = "T"
+
     # @pgf a = Axis({
     #     xlabel = "Location",
     #     ylabel = "T",
     #     title = "Temperature plot"
     # },
     # Plot(Table([:x => vec(geom.values), :y => vec(Temp.values)])))
-    display(a)
+    display(plt)
 
     # function errfh(loc,val)
     #     x = loc[1]
@@ -68,6 +72,7 @@ function T129b_l2_uq()
     # Temp=modeldata["temp"]
     # MeshExportModule.vtkexportmesh ("a.vtk", fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
 
+    nothing
 end # T129b_l2_uq
 
 
@@ -110,15 +115,20 @@ function T129b_l2_uq_algo()
     E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, m=3)
     println("Error=$E")
 
-    a = lineplot(vec(geom.values), vec(Temp.values), title = "Temperature Plot", xlabel = "x", ylabel = "T")
+    plt = PlotlyLight.Plot()
+    plt(x = vec(geom.values), y = vec(Temp.values))
+    plt.layout.xaxis.title = "x"
+    plt.layout.yaxis.title = "T"
+
     # @pgf a = Axis({
     #     xlabel = "Location",
     #     ylabel = "T",
     #     title = "Temperature plot"
     # },
     # Plot(Table([:x => vec(geom.values), :y => vec(Temp.values)])))
-    display(a)
+    display(plt)
 
+    nothing
 end # T129b_l2_uq_algo
 
 function allrun()
@@ -130,4 +140,8 @@ function allrun()
     T129b_l2_uq_algo()
 end # function allrun
 
+@info "All examples may be executed with "
+println("using .$(@__MODULE__); $(@__MODULE__).allrun()")
+
 end # module T129b_l2_examples
+nothing
