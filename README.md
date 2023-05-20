@@ -35,7 +35,7 @@ Cloning into 'FinEtoolsHeatDiff.jl'...
 Change your working directory, and run Julia:
 ```
 $ cd FinEtoolsHeatDiff.jl/
-PS C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl> C:\Users\pkonl\SublimeJulia-1.9.0\assets\julia-1.9.0\bin\julia.exe
+PS julia-1.9.0\bin\julia.exe
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
@@ -48,7 +48,7 @@ PS C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl> C:\Users\pkonl\SublimeJu
 Activate and instantiate the environment:
 ```
 (@v1.9) pkg> activate .; instantiate
-  Activating project at `C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl`
+  Activating project at `C:\Users\...\FinEtoolsHeatDiff.jl`
 ```
 Test the package:
 ```
@@ -73,12 +73,12 @@ Then activate and instantiate the `examples` environment.
 (FinEtoolsHeatDiff) pkg>
 
 shell> cd examples
-C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl\examples
+C:\Users\...\FinEtoolsHeatDiff.jl\examples
 
 julia> using Pkg
 
 julia> Pkg.activate("."); Pkg.instantiate()
-  Activating project at `C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl\examples`
+  Activating project at `C:\Users\...\FinEtoolsHeatDiff.jl\examples`
    [Output suppressed...]
 
 julia>
