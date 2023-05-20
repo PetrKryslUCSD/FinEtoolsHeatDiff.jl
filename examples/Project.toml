@@ -5,8 +5,6 @@ FinEtools = "91bb5406-6c9a-523d-811d-0644c4229550"
 FinEtoolsHeatDiff = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
 MKL = "33e6dc65-8f57-5167-99aa-e5a354878fb2"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
-REPLHistory = "a5566ce3-012c-4b09-85b8-62131f0c3f36"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 
 [compat]
