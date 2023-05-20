@@ -30,63 +30,58 @@ Clone the repo:
 PetrKrysl@Spectre MINGW64 /tmp/exp
 $ git clone https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl.git
 Cloning into 'FinEtoolsHeatDiff.jl'...
-remote: Enumerating objects: 111, done.
-remote: Counting objects: 100% (111/111), done.
-remote: Compressing objects: 100% (70/70), done.
-remote: Total 111 (delta 32), reused 103 (delta 27), pack-reused 0
-Receiving objects: 100% (111/111), 86.90 KiB | 2.71 MiB/s, done.
-Resolving deltas: 100% (32/32), done.
+[Further output suppressed...]
 ```
 Change your working directory, and run Julia:
 ```
 $ cd FinEtoolsHeatDiff.jl/
-
-PetrKrysl@Spectre MINGW64 /tmp/exp/FinEtoolsHeatDiff.jl (master)
-$ ~/AppData/Local/Julia-1.2.0-rc1/bin/julia.exe
+PS C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl> C:\Users\pkonl\SublimeJulia-1.9.0\assets\julia-1.9.0\bin\julia.exe
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.2.0-rc1.0 (2019-05-30)
+  | | |_| | | | (_| |  |  Version 1.9.0 (2023-05-07)
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
 |__/                   |
 ```
 Activate and instantiate the environment:
 ```
-(v1.2) pkg> activate .; instantiate
-[ Info: activating environment at `C:\Users\PETRKR~1\AppData\Local\Temp\exp\FinEtoolsHeatDiff.jl\Project.toml`.
-   Cloning default registries into `C:\Users\PetrKrysl\.julia`
-   Cloning registry from "https://github.com/JuliaRegistries/General.git"
-     Added registry `General` to `C:\Users\PetrKrysl\.julia\registries\General`
-   Cloning git-repo `https://github.com/PetrKryslUCSD/FinEtools.jl.git`
-  Updating git-repo `https://github.com/PetrKryslUCSD/FinEtools.jl.git`
- Installed Missings ─────────── v0.4.1
- Installed SortingAlgorithms ── v0.3.1
- Installed Arpack ───────────── v0.3.1
- Installed OrderedCollections ─ v1.1.0
- Installed DataStructures ───── v0.15.0
- Installed BinaryProvider ───── v0.5.4
- Installed StatsBase ────────── v0.30.0
-  Building Arpack → `C:\Users\PetrKrysl\.julia\packages\Arpack\cu5By\deps\build.log`
+(@v1.9) pkg> activate .; instantiate
+  Activating project at `C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl`
 ```
 Test the package:
 ```
 (FinEtoolsHeatDiff) pkg> test
-   Testing FinEtoolsHeatDiff
- Resolving package versions...
-Test Summary:  | Pass  Total
-Heat diffusion |   61     61
- 43.754623 seconds (120.44 M allocations: 8.151 GiB, 6.38% gc time)
-   Testing FinEtoolsHeatDiff tests passed
+     Testing FinEtoolsHeatDiff
+[Output suppressed...]
+
+     Testing Running tests...
+Test Summary:  | Pass  Total     Time
+Heat diffusion |   62     62  1m08.7s
+ 68.849887 seconds (85.11 M allocations: 6.588 GiB, 2.97% gc time, 85.82% compilation time)
+     Testing FinEtoolsHeatDiff tests passed
+
+(FinEtoolsHeatDiff) pkg>
 ```
 
 ## Examples
 
-Activate and instantiate the environment:
+The examples have their own environment. Change the folder to `examples`.
+Then activate and instantiate the `examples` environment.
 ```
-using Pkg
-Pkg.activate("."); Pkg.instantiate()
+(FinEtoolsHeatDiff) pkg>
+
+shell> cd examples
+C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl\examples
+
+julia> using Pkg
+
+julia> Pkg.activate("."); Pkg.instantiate()
+  Activating project at `C:\Users\pkonl\Documents\00WIP\FinEtoolsHeatDiff.jl\examples`
+   [Output suppressed...]
+
+julia>
 ```
 
 There are a number of examples, which may
