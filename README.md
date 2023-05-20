@@ -22,12 +22,10 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 ## How to test the package
 
 Here is a record of a session to install this package and test it. You should
-see something similar. The git bash running on Windows 10 was used in this
-example.
+see something similar. The Git bash running on Windows or the Powershell could be used.
 
 Clone the repo:
 ```
-PetrKrysl@Spectre MINGW64 /tmp/exp
 $ git clone https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl.git
 Cloning into 'FinEtoolsHeatDiff.jl'...
 [Further output suppressed...]
@@ -35,7 +33,7 @@ Cloning into 'FinEtoolsHeatDiff.jl'...
 Change your working directory, and run Julia:
 ```
 $ cd FinEtoolsHeatDiff.jl/
-PS julia-1.9.0\bin\julia.exe
+$ julia-1.9.0\bin\julia.exe
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
