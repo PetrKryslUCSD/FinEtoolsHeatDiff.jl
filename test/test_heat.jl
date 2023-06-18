@@ -1,5 +1,6 @@
 module mmmmPoiss_06122017
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky, Symmetric
@@ -52,18 +53,16 @@ function test()
 
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
-  # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
-  # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
+
   fi = ForceIntensity(FFlt[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
-  # println("Factorization")
-  K = cholesky(Symmetric(K))
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
 
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
@@ -88,6 +87,7 @@ mmmmPoiss_06122017.test()
 
 module mmmmannulus_Q4_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -166,6 +166,7 @@ mmmmannulus_Q4_example_algo.test()
 
 module mmmmmPoisson_FE_Q4_1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
@@ -186,6 +187,7 @@ function test()
   thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = -6.0; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 100;
@@ -218,16 +220,20 @@ function test()
   #Profile.print()
 
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   fi = ForceIntensity(FFlt, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   # println("Factorization")
-  K = cholesky(K)
-  # println("Solution of the factorized system")
-  U=  K\(F1+F2)
-  scattersysvec!(Temp, U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp), (:f, ))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
 
 
   # println("Total time elapsed = $(time() - t0) [s]")
@@ -253,6 +259,7 @@ mmmmmPoisson_FE_Q4_1.test()
 
 module mmmmmPoisson_FE_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -308,7 +315,8 @@ function test()
     end
 
     femm.integdomain.integration_rule = TriRule(6)
-    E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, m=3)
+
+    E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, 3)
     # println("Error=$E")
 
     @test E < 0.0025
@@ -320,6 +328,7 @@ mmmmmPoisson_FE_example_algo.test()
 
 module mmmmmPoissonRm2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
@@ -341,6 +350,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 100;# number of subdivisions along the sides of the square domain
@@ -375,16 +385,19 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   fi = ForceIntensity(FFlt[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
-  # println("Factorization")
-  K = cholesky(K)
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
 
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
@@ -403,6 +416,7 @@ mmmmmPoissonRm2.test()
 
 module mmmmmmmmmNAFEMSm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: norm
@@ -584,6 +598,7 @@ mmmmmmmmmNAFEMSm.test()
 
 module mmmmmmconvergence
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: norm
@@ -763,6 +778,7 @@ mmmmmmconvergence.test()
 
 module mmmPoissonmmmt4mmmm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -774,6 +790,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 30;# number of subdivisions along the sides of the square domain
@@ -818,18 +835,20 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
   fi = ForceIntensity(FFlt[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
-  # println("Factorization")
 
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
 
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
   #
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
@@ -847,6 +866,7 @@ mmmPoissonmmmt4mmmm.test()
 
 module mmmPoissonmmmt10mm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -858,6 +878,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 13;# number of subdivisions along the sides of the square domain
@@ -902,7 +923,7 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
   fi = ForceIntensity(FFlt[Q]);
@@ -911,9 +932,14 @@ function test()
   # println("Factorization")
 
 
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
   #
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
@@ -931,6 +957,7 @@ mmmPoissonmmmt10mm.test()
 
 module mmmPoissonmmh8mm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -942,6 +969,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 13;# number of subdivisions along the sides of the square domain
@@ -986,19 +1014,19 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
   fi = ForceIntensity(FFlt[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
-  # println("Factorization")
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
 
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
 
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
-  #
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
 
@@ -1015,6 +1043,7 @@ mmmPoissonmmh8mm.test()
 
 module mmmmmactuatormmh8m
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -1101,12 +1130,15 @@ function test()
   K = conductivity(hotfemm, geom, Temp) +
   conductivity(coldfemm, geom, Temp)
   fi = ForceIntensity(FFlt[Q]);
-  F = distribloads(hotfemm, geom, Temp, fi, 3) +
-  nzebcloadsconductivity(hotfemm, geom, Temp) +
-  nzebcloadsconductivity(coldfemm, geom, Temp)
+  F = distribloads(hotfemm, geom, Temp, fi, 3)
 
-  U = K\F
-  scattersysvec!(Temp,U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
 
   # using Plots
   # plotly()
@@ -1132,6 +1164,7 @@ mmmmmactuatormmh8m.test()
 
 module mmmmmactuatormmmmmmmm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -1220,12 +1253,16 @@ function test()
   K = conductivity(hotfemm, geom, Temp) +
   conductivity(coldfemm, geom, Temp)
   fi = ForceIntensity(FFlt[Q]);
-  F = distribloads(hotfemm, geom, Temp, fi, 3) +
-  nzebcloadsconductivity(hotfemm, geom, Temp) +
-  nzebcloadsconductivity(coldfemm, geom, Temp)
+  F = distribloads(hotfemm, geom, Temp, fi, 3)
 
-  U = K\F
-  scattersysvec!(Temp,U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
 
   # using Plots
   # plotly()
@@ -1251,6 +1288,7 @@ mmmmmactuatormmmmmmmm.test()
 
 module mmmmPoiss_07082017
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -1272,6 +1310,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 100;# number of subdivisions along the sides of the square domain
@@ -1303,16 +1342,19 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
   # println("Nonzero EBC")
-  F2 = nzebcloadsconductivity(femm, geom, Temp);
+
   # println("Internal heat generation")
   fi = ForceIntensity(FFlt, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
-  # println("Factorization")
-  # K = cholesky(K)
-  # println("Solution of the factorized system")
-  U = K\(F1+F2)
-  scattersysvec!(Temp,U[:])
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
 
   # println("Total time elapsed = $(time() - t0) [s]")
   # println("Solution time elapsed = $(time() - t1) [s]")
@@ -1337,6 +1379,7 @@ mmmmPoiss_07082017.test()
 
 module mmmmmAnnularQ8mmmmm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: norm, cholesky
@@ -1391,7 +1434,14 @@ function test()
   fi = ForceIntensity(FFlt[+magn]);#leaving the domain
   F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
-  F3 = nzebcloadsconductivity(femm,  geom,  Temp);
+
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+  F_f = vector_blocked((F1+F2), nfreedofs(Temp))[:f]
+  T_d = gathersysvec(Temp, :d)
+
+  T_f = K_ff\(F_f - K_fd * T_d)
+  scattersysvec!(Temp, T_f)
+
 
 
   K = cholesky(K)
@@ -1415,6 +1465,7 @@ mmmmmAnnularQ8mmmmm.test()
 
 module mmpnpConcreteColumnsymb_conv
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: norm, cholesky
@@ -1467,6 +1518,7 @@ mmpnpConcreteColumnsymb_conv.test()
 
 module mmmmPoiss_08082017
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using Test
@@ -1490,6 +1542,7 @@ function test()
   Q = -6.0; # internal heat generation rate
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = Q; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 10;# number of subdivisions along the sides of the square domain
@@ -1559,6 +1612,7 @@ mmmmPoiss_08082017.test()
 
 module mmmmmPoisson_FE_Q8_2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using Test
@@ -1580,6 +1634,7 @@ function test()
   thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = -6.0; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 10;
@@ -1653,6 +1708,7 @@ mmmmmPoisson_FE_Q8_2.test()
 
 module mmmPoissonmmmt10m2m
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -1738,6 +1794,7 @@ mmmPoissonmmmt10m2m.test()
 
 module mPoisson_FE_Q4toT3_2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using Test
@@ -1759,6 +1816,7 @@ function test()
   thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
   function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     forceout[1] = -6.0; #heat source
+    return forceout
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
   N = 10;
@@ -1833,6 +1891,7 @@ mPoisson_FE_Q4toT3_2.test()
 
 module mPoisson_FE_T3_orientations
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using Test
@@ -1856,6 +1915,7 @@ function test()
         thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
         function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
             forceout[1] = -6.0; #heat source
+            return forceout
         end
         tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
         N = 10;
@@ -1928,6 +1988,7 @@ mPoisson_FE_T3_orientations.test()
 
 module mmT129b_l2_uqm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
@@ -1975,6 +2036,7 @@ mmT129b_l2_uqm.test()
 
 module mmannulusconv1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using Test
@@ -2047,6 +2109,7 @@ mmannulusconv1.test()
 
 module mmmmPoiss_energy
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using Test
@@ -2124,6 +2187,7 @@ mmmmPoiss_energy.test()
 
 module mQPoisson_FE_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -2193,6 +2257,7 @@ mQPoisson_FE_example_algo.test()
 
 module mconvfunNAFEMSm
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: norm
@@ -2373,6 +2438,7 @@ mconvfunNAFEMSm.test()
 
 module mfluxannulus_Q4_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -2451,6 +2517,7 @@ mfluxannulus_Q4_example_algo.test()
 
 module mmmmPoiss_trirules
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
@@ -2503,6 +2570,7 @@ mmmmPoiss_trirules.test()
 
 module mmmmPoiss_gaussrules
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
@@ -2555,6 +2623,7 @@ mmmmPoiss_gaussrules.test()
 
 module mmPoiss_heatflux_1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -2657,6 +2726,7 @@ mmPoiss_heatflux_1.test()
 
 module mmblock_heatflux_1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -2727,6 +2797,7 @@ mmblock_heatflux_1.test()
 
 module mmblock_heatflux_2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -2800,6 +2871,7 @@ mmblock_heatflux_2.test()
 
 module mmblock_heatflux_3
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -2876,6 +2948,7 @@ mmblock_heatflux_3.test()
 
 module mmblock_heatflux_4
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -2949,6 +3022,7 @@ mmblock_heatflux_4.test()
 
 module mmblock_Energy_2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule.VTK: vtkexportmesh, T3, vtkexportvectors
 using Test
@@ -3009,6 +3083,7 @@ mmblock_Energy_2.test()
 
 module mannulus_T3_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -3087,6 +3162,7 @@ mannulus_T3_example_algo.test()
 
 module mannulus_T6_example_algo
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
@@ -3165,6 +3241,7 @@ mannulus_T6_example_algo.test()
 
 module mmmmmAnnularQ8penalty
 using FinEtools
+
 using FinEtoolsHeatDiff
 using FinEtools.AlgoBaseModule: penaltyebc!
 using Test
@@ -3253,6 +3330,7 @@ mmmmmAnnularQ8penalty.test()
 
 module mmmmmactuatormmh8m1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.AlgoBaseModule: penaltyebc!
 # using UnicodePlots
@@ -3379,6 +3457,7 @@ mmmmmactuatormmh8m1.test()
 
 module minnerproduct1
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 using Arpack
@@ -3441,6 +3520,7 @@ minnerproduct1.test()
 
 module minnerproduct2
 using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 using Arpack
@@ -3504,7 +3584,7 @@ minnerproduct2.test()
 
 module hill_decay_gentrap
 using FinEtools
-using FinEtools
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky, mul!, lu, norm
@@ -3547,8 +3627,11 @@ function test()
 	K = conductivity(femm, geom, Temp)
 	C = capacity(femm, geom, Temp)
 
-	A = cholesky((1/dt*C+theta*K))
-	B = (1/dt*C-(1-theta)*K)
+    K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+    C_ff, C_fd = matrix_blocked(C, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+
+	A = cholesky((1/dt*C_ff+theta*K_ff))
+	B = (1/dt*C_ff-(1-theta)*K_ff)
 
 	Tn = gathersysvec(Temp)
 	Tn1 = deepcopy(Tn)
