@@ -114,13 +114,13 @@ function energy(self::FEMMHeatDiff, geom::NodalField{FFlt},  temp::NodalField{FF
     fluxT = reshape(deepcopy(gradT), length(gradT), 1)
     energy = 0.0
     # Now loop over all finite elements in the set
-    for i = 1:count(fes) # Loop over elements
+    for i  in  1:count(fes) # Loop over elements
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gathervalues_asvec!(temp, elvec, fes.conn[i]);# retrieve element coordinates
-        for j=1:npts # Loop over quadrature points
+        for j in 1:npts # Loop over quadrature points
             locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
-            updatecsmat!(self.mcsys, loc, J, fes.label[i]);
+            updatecsmat!(self.mcsys, loc, J, i, j);
             mulCAtB!(RmTJ,  csmat(self.mcsys),  J); # local Jacobian matrix
             gradN!(fes, gradN, gradNparams[j], RmTJ);
             mulCAtB!(gradT, reshape(elvec, length(elvec), 1), gradN)
@@ -178,14 +178,14 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{FFlt}, u::Nodal
     out1 = fill(zero(FFlt), sdim); # output -- buffer
     out =  fill(zero(FFlt), sdim);# output -- buffer
     # Loop over  all the elements and all the quadrature points within them
-    for ilist = 1:length(felist) # Loop over elements
+    for ilist  in  1:length(felist) # Loop over elements
         i = felist[ilist];
         gathervalues_asmat!(geom, ecoords, fes.conn[i]);
         gathervalues_asvec!(temp, Te, fes.conn[i]);# retrieve element temperatures
-        for j = 1:npts # Loop over quadrature points
+        for j  in  1:npts # Loop over quadrature points
             locjac!(loc, J, ecoords, Ns[j], gradNparams[j])
             Jac = Jacobianvolume(self.integdomain, J, loc, fes.conn[i], Ns[j]);
-            updatecsmat!(self.mcsys, loc, J, fes.label[i]);
+            updatecsmat!(self.mcsys, loc, J, i, j);
             mulCAtB!(RmTJ,  csmat(self.mcsys),  J); # local Jacobian matrix
             gradN!(fes, gradN, gradNparams[j], RmTJ);
             # Quadrature point quantities
