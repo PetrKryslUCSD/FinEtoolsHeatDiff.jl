@@ -6,16 +6,17 @@ Module for algorithms in linear heat conduction/diffusion  models.
 module AlgoHeatDiffModule
 
 using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, FIntMat, FMat, FVec, FDataDict
-import FinEtools.AlgoBaseModule: dcheck!
-import FinEtools.FieldModule: ndofs, setebc!, numberdofs!, applyebc!, scattersysvec!
-import FinEtools.NodalFieldModule: NodalField, nnodes
-import FinEtools.FEMMBaseModule: associategeometry!, distribloads
-import FinEtools.ForceIntensityModule: ForceIntensity
-import FinEtools.MeshSelectionModule: connectednodes
-import SparseArrays: spzeros
-import LinearAlgebra: cholesky
-import FinEtoolsHeatDiff.FEMMHeatDiffModule: conductivity, nzebcloadsconductivity
-import FinEtoolsHeatDiff.FEMMHeatDiffSurfModule: surfacetransfer, surfacetransferloads, nzebcsurfacetransferloads
+using FinEtools.AlgoBaseModule: dcheck!
+using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
+using FinEtools.FieldModule: ndofs, setebc!, numberdofs!, applyebc!, scattersysvec!, nalldofs, nfreedofs, gathersysvec
+using FinEtools.NodalFieldModule: NodalField, nnodes
+using FinEtools.FEMMBaseModule: associategeometry!, distribloads
+using FinEtools.ForceIntensityModule: ForceIntensity
+using FinEtools.MeshSelectionModule: connectednodes
+using SparseArrays: spzeros
+using LinearAlgebra: cholesky
+using FinEtoolsHeatDiff.FEMMHeatDiffModule: conductivity
+using FinEtoolsHeatDiff.FEMMHeatDiffSurfModule: surfacetransfer, surfacetransferloads
 
 """
     steadystate(modeldata::FDataDict)
@@ -106,13 +107,13 @@ function steadystate(modeldata::FDataDict)
     end
 
     # Number the equations
-    numberdofs!(temp)           #,Renumbering_options); # NOT DONE <<<<<<<<<<<<<<<<<
+    numberdofs!(temp)           #,Renumbering_options); # NOT DONE
 
     # Initialize the heat loads vector
-    F = zeros(FFlt,temp.nfreedofs);
+    F = zeros(FFlt, nalldofs(temp));
 
     # Construct the system conductivity matrix
-    K = spzeros(temp.nfreedofs,temp.nfreedofs); # (all zeros, for the moment)
+    K = spzeros(nalldofs(temp), nalldofs(temp)); # (all zeros, for the moment)
     regions = get(()->error("Must get regions!"), modeldata, "regions")
     for i = 1:length(regions)
         region = regions[i]
@@ -127,11 +128,6 @@ function steadystate(modeldata::FDataDict)
             fi = ForceIntensity(Q);
         end
         F = F + distribloads(femm, geom, temp, fi, 3);
-        # Loads due to the essential boundary conditions on the temperature field
-        essential_bcs = get(modeldata, "essential_bcs", nothing);
-        if (essential_bcs != nothing)
-        F = F + nzebcloadsconductivity(femm, geom, temp);
-        end
     end
 
     # Process the convection boundary condition
@@ -161,13 +157,6 @@ function steadystate(modeldata::FDataDict)
             femm = convbc["femm"];
             K = K + surfacetransfer(femm, geom, temp);
             F = F + surfacetransferloads(femm, geom, temp, amb);
-            # Note that EBC will contribute through the surface heat transfer matrix
-            essential_bcs = get(modeldata, "essential_bcs", nothing);
-            # If any essential boundary condition defined, the convection BC could
-            # contribute a load term
-            if (essential_bcs != nothing)
-                F = F + nzebcsurfacetransferloads(femm, geom, temp);
-            end
         end
     end
 
@@ -195,9 +184,18 @@ function steadystate(modeldata::FDataDict)
     end
 
     # Solve for the temperatures
-    K = cholesky(K);
-    U = K\F;
-    scattersysvec!(temp, U[:])
+    K_ff, K_fd = matrix_blocked(K, nfreedofs(temp), nfreedofs(temp))[(:ff, :fd)]
+    F_f = vector_blocked(F, nfreedofs(temp))[:f]
+    T_d = gathersysvec(temp, :d)
+
+    # Loads due to the essential boundary conditions on the temperature field
+    essential_bcs = get(modeldata, "essential_bcs", nothing);
+    if (essential_bcs != nothing) # there was at least one EBC applied
+        F_f .+= - K_fd * T_d
+    end
+
+    T_f = K_ff \ (F_f)
+    scattersysvec!(temp, T_f)
 
     # Update the model data
     setindex!(modeldata, geom, "geom");
