@@ -8,6 +8,6 @@ PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 
 [compat]
-ChunkSplitters = "^0.1"
+ChunkSplitters = "1.0, 2.0"
 FinEtools = "^6.0"
 FinEtoolsHeatDiff = "^2.0"
