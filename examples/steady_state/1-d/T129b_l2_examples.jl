@@ -1,5 +1,6 @@
 module T129b_l2_examples
 using FinEtools
+using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using LinearAlgebra: cholesky
@@ -33,16 +34,12 @@ function T129b_l2_uq()
 
     K = conductivity(femm, geom, Temp)
 
-    F2 = nzebcloadsconductivity(femm, geom, Temp);
-
     fi = ForceIntensity(FFlt[Q]);
-    F1 = distribloads(femm, geom, Temp, fi, 3);
+    F = distribloads(femm, geom, Temp, fi, 3);
 
-    K = cholesky(K)
-    U = K\(F1+F2)
-    scattersysvec!(Temp,U[:])
+    solve!(Temp, K, F)
 
-    println("maximum(U)-0.1102 = $(maximum(U)-0.1102)")
+    println("maximum(U)-0.1102 = $(maximum(Temp.values)-0.1102)")
 
     plt = PlotlyLight.Plot()
     plt(x = vec(geom.values), y = vec(Temp.values))
@@ -112,7 +109,7 @@ function T129b_l2_uq_algo()
     end
 
     femm.integdomain.integration_rule = GaussRule(1, 4)
-    E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, m=3)
+    E = integratefieldfunction(femm, geom, Temp, errfh; initial=0.0, m=3)
     println("Error=$E")
 
     plt = PlotlyLight.Plot()
