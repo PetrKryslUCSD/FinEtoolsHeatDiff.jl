@@ -1,5 +1,6 @@
 module actuator_examples
 using FinEtools
+using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using PlotlyLight
@@ -88,10 +89,9 @@ function actuator2()
 
     K = conductivity(hotfemm, geom, Temp) + conductivity(coldfemm, geom, Temp)
     fi = ForceIntensity(FFlt[Q]);
-    F = distribloads(hotfemm, geom, Temp, fi, 3) + nzebcloadsconductivity(hotfemm, geom, Temp) + nzebcloadsconductivity(coldfemm, geom, Temp)
+    F = distribloads(hotfemm, geom, Temp, fi, 3)
 
-    U = K\F
-    scattersysvec!(Temp,U[:])
+    solve!(Temp, K, F)
 
     nList = selectnode(fens, box=[x1,x1,y0,y1,z1,z1], inflate=t/1000)
     y_i = geom.values[nList, 2]
