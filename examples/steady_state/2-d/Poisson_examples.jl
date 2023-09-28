@@ -1,5 +1,6 @@
 module Poisson_examples
 using FinEtools
+using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
@@ -31,12 +32,12 @@ function Poisson_FE_example()
     Temp = NodalField(zeros(size(fens.xyz,1),1))
 
     println("Searching nodes  for BC")
-    @time l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    @time l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    @time l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    @time l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
+    l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
+    l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
+    l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
+    l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
     List = vcat(l1, l2, l3, l4)
-    @time setebc!(Temp, List, true, 1, [tempf(geom.values[i,1], geom.values[i,2]) for i in List])
+    setebc!(Temp, List, true, 1, [tempf(geom.values[i,1], geom.values[i,2]) for i in List])
     @time applyebc!(Temp)
     @time numberdofs!(Temp)
     @show count(fes), count(fens)
@@ -50,21 +51,16 @@ function Poisson_FE_example()
 
     println("Conductivity")
     @time K = conductivity(femm, geom, Temp)
-    println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     # function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
     #   forceout[1] = Q; #heat source
     # end
     # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(FEMMBase(IntegDomain(fes, TriRule(1))), geom, Temp, fi, 3);
+    @time F = distribloads(FEMMBase(IntegDomain(fes, TriRule(1))), geom, Temp, fi, 3);
 
-    println("Factorization")
-    @time K = cholesky(K)
-    println("Solution of the factorized system")
-    @time U = K\(F1+F2)
-    scattersysvec!(Temp,U[:])
+    println("Solution")
+    @time solve!(Temp, K, F)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
@@ -133,7 +129,7 @@ function Poisson_FE_example_algo()
         exact = tempf(loc...)
         return ((exact[1]-val[1])*exact)
     end
-    E = integratefieldfunction(femm, geom, Temp, errfh, 0.0, m=3)
+    E = integratefieldfunction(femm, geom, Temp, errfh; initial=0.0, m=3)
     println("Error=$E")
 
 end # Poisson_FE_example_algo
@@ -190,17 +186,12 @@ function Poisson_FE_example_csys_1()
 
     println("Conductivity")
     @time K = conductivity(femm, geom, Temp)
-    println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     fi = ForceIntensity(FFlt[Q]);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    @time F = distribloads(femm, geom, Temp, fi, 3);
 
-    println("Factorization")
-    @time K = cholesky(K)
-    println("Solution of the factorized system")
-    @time U = K\(F1+F2)
-    scattersysvec!(Temp,U[:])
+    println("Solution")
+    @time solve!(Temp, K, F)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
@@ -235,8 +226,9 @@ function Poisson_FE_Q4_example()
 
     A = 1.0
     thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
         forceout[1] = -6.0; #heat source
+        return forceout
     end
     tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
@@ -250,10 +242,10 @@ function Poisson_FE_Q4_example()
 
 
     println("Searching nodes  for BC")
-    @time l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    @time l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    @time l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    @time l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
+    l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
+    l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
+    l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
+    l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
     List = vcat(l1, l2, l3, l4);
     setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
     applyebc!(Temp)
@@ -269,17 +261,12 @@ function Poisson_FE_Q4_example()
     @time K=conductivity(femm, geom, Temp)
     #Profile.print()
 
-    println("Nonzero EBC")
-    @time F2 = nzebcloadsconductivity(femm, geom, Temp);
     println("Internal heat generation")
     fi = ForceIntensity(FFlt, 1, getsource!);
-    @time F1 = distribloads(femm, geom, Temp, fi, 3);
+    @time F = distribloads(femm, geom, Temp, fi, 3);
 
-    println("Factorization")
-    @time K = cholesky(K)
-    println("Solution of the factorized system")
-    @time U=  K\(F1+F2)
-    scattersysvec!(Temp, U[:])
+    println("Solution")
+    @time solve!(Temp, K, F)
 
 
     println("Total time elapsed = $(time() - t0) [s]")
