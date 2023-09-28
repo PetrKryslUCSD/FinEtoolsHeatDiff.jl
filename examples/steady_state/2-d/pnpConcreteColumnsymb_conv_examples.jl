@@ -1,5 +1,6 @@
 module pnpConcreteColumnsymb_conv_examples
 using FinEtools
+using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtools.MeshExportModule
 using LinearAlgebra: cholesky
@@ -39,14 +40,18 @@ function pnpConcreteColumnsymb_conv()
     fi = ForceIntensity(FFlt[Q]);
     F1 = distribloads(femm, geom, Temp, fi, 3);
     K = conductivity(femm, geom, Temp)
-    F2 = nzebcloadsconductivity(femm, geom, Temp);
+
     H = surfacetransfer(cfemm, geom, Temp);
-    show(H)
+    @show H
     # F3 = surfacetransferloads(femm, geom, temp, amb);
-    Factor = cholesky(K+H)
-    U = Factor\(F1+F2)
-    scattersysvec!(Temp, U[:])
-    display(Temp)
+    K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))
+    @show H_ff, H_fd = matrix_blocked(H, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))
+    @show F_f, ~ = vector_blocked(F1, nfreedofs(Temp), (:f, ))
+    T_d = gathersysvec(Temp, :d)
+    T_f = (K_ff + H_ff) \ (F_f - (K_fd + H_fd) * T_d)
+    scattersysvec!(Temp, T_f)
+
+    @show Temp
 
 end
 
