@@ -9,5 +9,5 @@ Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 
 [compat]
 ChunkSplitters = "^0.1"
-FinEtools = "^6.0"
+FinEtools = "^7.0"
 FinEtoolsHeatDiff = "^2.0"
