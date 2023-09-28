@@ -10,13 +10,10 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 
 ## News
 
+- 09/28/2023: Updated examples.
 - 06/20/2023: Updated for FinEtools 7.0.
 - 05/20/2023: Updated for Julia 1.9.
 - 04/22/2023: Updated for generic FinEtools.
-- 03/08/2022: Introduced incompatible change of the assemblers (FinEtools 6.0.1).
-- 05/05/2022: Renamed the branch `main`. Updated for Julia 1.7.
-- 05/23/2021: Updated for Julia 1.6.
-- 10/11/2019: Corrected design flaw in matrix utilities.
 
 [Past news](oldnews.md)
 
