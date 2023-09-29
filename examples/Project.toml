@@ -6,6 +6,7 @@ FinEtoolsHeatDiff = "972d1c22-8bdd-11e9-11cf-cdcb7577b041"
 MKL = "33e6dc65-8f57-5167-99aa-e5a354878fb2"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
+Targe2 = "f62361a0-daf5-40d4-849b-fa9ebeca3f63"
 
 [compat]
 ChunkSplitters = "1.0, 2.0"
