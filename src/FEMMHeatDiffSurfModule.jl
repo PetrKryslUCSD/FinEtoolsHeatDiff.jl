@@ -6,7 +6,6 @@ system vectors for linear heat diffusion/conduction.
 """
 module FEMMHeatDiffSurfModule
 
-using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, FIntMat, FMat, FVec, FDataDict
 using FinEtools.FENodeSetModule: FENodeSet
 using FinEtools.FESetModule: AbstractFESet, nodesperelem, manifdim
 using FinEtools.IntegDomainModule: IntegDomain, integrationdata, Jacobiansurface
@@ -24,14 +23,17 @@ using FinEtools.DataCacheModule: DataCache
 
     Type for heat diffusion finite element modeling machine for boundary integrals.
 """
-mutable struct FEMMHeatDiffSurf{ID<:IntegDomain} <: AbstractFEMM
+mutable struct FEMMHeatDiffSurf{ID<:IntegDomain, FloatT} <: AbstractFEMM
     integdomain::ID # geometry data
-    surfacetransfercoeff::FFlt # material object
+    surfacetransfercoeff::FloatT # material object
+end
+
+function FEMMHeatDiffSurf(integdomain::ID) where {ID<:IntegDomain}
+    return FEMMHeatDiffSurf(integdomain, 0.0)
 end
 
 """
-    surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A,
-      geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
+    surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, FloatT}
 
 Compute the surface heat transfer matrix.
 
@@ -41,19 +43,17 @@ Compute the surface heat transfer matrix.
 - `geom` = geometry field,
 - `temp` = temperature field
 """
-function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FFlt}, temp::NodalField{FFlt}) where {A<:AbstractSysmatAssembler}
+function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, FloatT}
     return bilform_dot(self, assembler, geom, temp, DataCache(self.surfacetransfercoeff); m = 2); # two dimensional, surface, domain
 end
 
-function surfacetransfer(self::FEMMHeatDiffSurf, geom::NodalField{FFlt}, temp::NodalField{FFlt})
+function surfacetransfer(self::FEMMHeatDiffSurf, geom::NodalField{FloatT}, temp::NodalField{FloatT}) where {FloatT}
     assembler = SysmatAssemblerSparseSymm()
     return  surfacetransfer(self, assembler, geom, temp);
 end
 
 """
-    surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,
-      geom::NodalField{FFlt}, temp::NodalField{FFlt},
-      ambtemp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
+    surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, FloatT}
 
 Compute the load vector corresponding to surface heat transfer.
 
@@ -64,7 +64,7 @@ Compute the load vector corresponding to surface heat transfer.
 - `temp` = temperature field
 - `ambtemp` = ambient temperature field on the surface
 """
-function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FFlt}, temp::NodalField{FFlt},  ambtemp::NodalField{FFlt}) where {A<:AbstractSysvecAssembler}
+function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, FloatT}
     fes = self.integdomain.fes
     # Constants
     nfes = count(fes); # number of finite elements in the set
@@ -76,12 +76,12 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
     # Precompute basis f. values + basis f. gradients wrt parametric coor
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     # Prepare assembler and temporaries
-    ecoords = fill(zero(FFlt), nne, ndofs(geom)); # array of Element coordinates
-    Fe = fill(zero(FFlt), Hedim, 1); # element matrix -- used as a buffer
-    dofnums = zeros(FInt, Hedim); # degree of freedom array -- used as a buffer
-    loc = fill(zero(FFlt), 1, sdim); # quadrature point location -- used as a buffer
-    J = fill(zero(FFlt), sdim, mdim); # Jacobian matrix -- used as a buffer
-    pT = fill(zero(FFlt), Hedim);
+    ecoords = fill(zero(FloatT), nne, ndofs(geom)); # array of Element coordinates
+    Fe = fill(zero(FloatT), Hedim, 1); # element matrix -- used as a buffer
+    dofnums = zeros(eltype(temp.dofnums), Hedim); # degree of freedom array -- used as a buffer
+    loc = fill(zero(FloatT), 1, sdim); # quadrature point location -- used as a buffer
+    J = fill(zero(FloatT), sdim, mdim); # Jacobian matrix -- used as a buffer
+    pT = fill(zero(FloatT), Hedim);
     startassembly!(assembler, nalldofs(temp));
     for i in 1:count(fes)  # Loop over elements
         gathervalues_asvec!(ambtemp, pT, fes.conn[i]);# retrieve ambient temp
@@ -104,9 +104,9 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
 end
 
 function surfacetransferloads(self::FEMMHeatDiffSurf,
-                                        geom::NodalField{FFlt},
-                                        temp::NodalField{FFlt},
-                                        ambtemp::NodalField{FFlt})
+                                        geom::NodalField{FloatT},
+                                        temp::NodalField{FloatT},
+                                        ambtemp::NodalField{FloatT}) where {FloatT}
     assembler = SysvecAssembler()
     return  surfacetransferloads(self, assembler, geom, temp, ambtemp);
 end

@@ -5,7 +5,7 @@ Module for algorithms in linear heat conduction/diffusion  models.
 """
 module AlgoHeatDiffModule
 
-using FinEtools.FTypesModule: FInt, FFlt, FCplxFlt, FFltVec, FIntVec, FFltMat, FIntMat, FMat, FVec, FDataDict
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: dcheck!
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtools.FieldModule: ndofs, setebc!, numberdofs!, applyebc!, scattersysvec!, nalldofs, nfreedofs, gathersysvec
@@ -83,6 +83,8 @@ function steadystate(modeldata::FDataDict)
     # Construct the temperature field
     temp = NodalField(zeros(size(fens.xyz,1),1))
 
+    FloatT = eltype(temp.values)
+
     # Apply the essential boundary conditions on the temperature field
     essential_bcs = get(modeldata, "essential_bcs", nothing);
     if (essential_bcs != nothing)
@@ -91,7 +93,7 @@ function steadystate(modeldata::FDataDict)
             dcheck!(ebc, essential_bcs_recognized_keys)
             fenids = get(()->error("Must get node list!"), ebc, "node_list");
             temperature = get(ebc, "temperature", nothing);
-            T_fixed = zeros(FFlt,length(fenids)); # default is  zero temperature
+            T_fixed = zeros(FloatT,length(fenids)); # default is  zero temperature
             if (temperature != nothing) # if it is nonzero,
                 if (typeof(temperature) <: Function) # it could be a function
                     for k = 1:length(fenids)
@@ -110,7 +112,7 @@ function steadystate(modeldata::FDataDict)
     numberdofs!(temp)           #,Renumbering_options); # NOT DONE
 
     # Initialize the heat loads vector
-    F = zeros(FFlt, nalldofs(temp));
+    F = zeros(FloatT, nalldofs(temp));
 
     # Construct the system conductivity matrix
     K = spzeros(nalldofs(temp), nalldofs(temp)); # (all zeros, for the moment)
@@ -123,7 +125,7 @@ function steadystate(modeldata::FDataDict)
         K = K + conductivity(femm, geom, temp);
         Q = get(region, "Q", [0.0]);
         if (typeof(Q) <: Function)
-            fi = ForceIntensity(FFlt, 1, Q);
+            fi = ForceIntensity(FloatT, 1, Q);
         else
             fi = ForceIntensity(Q);
         end
@@ -141,7 +143,7 @@ function steadystate(modeldata::FDataDict)
             # Apply the prescribed ambient temperature
             fenids = connectednodes(femm.integdomain.fes);
             fixed = ones(length(fenids));
-            T_fixed = zeros(FFlt, length(fenids)); # default is zero
+            T_fixed = zeros(FloatT, length(fenids)); # default is zero
             ambient_temperature = get(convbc, "ambient_temperature", nothing);
             if ambient_temperature != nothing  # if given as nonzero
                 if (typeof(ambient_temperature) <: Function) # given by function
@@ -168,11 +170,11 @@ function steadystate(modeldata::FDataDict)
             dcheck!(fluxbc, flux_bcs_recognized_keys)
             normal_flux = fluxbc["normal_flux"];
             if (typeof(normal_flux) <: Function)
-                fi = ForceIntensity(FFlt, 1, normal_flux);
+                fi = ForceIntensity(FloatT, 1, normal_flux);
             else
                 if typeof(normal_flux) <: AbstractArray
                 else
-                    normal_flux = FFlt[normal_flux]
+                    normal_flux = FloatT[normal_flux]
                 end
                 fi = ForceIntensity(normal_flux);
             end
