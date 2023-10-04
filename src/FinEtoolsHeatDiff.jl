@@ -1,5 +1,5 @@
 """
-FinEtools (C) 2017-2019, Petr Krysl
+FinEtools (C) 2017-2023, Petr Krysl
 
 Finite Element tools.  Julia implementation  of the finite element method
 for continuum mechanics. Package for heat diffusion problems.
@@ -8,7 +8,10 @@ module FinEtoolsHeatDiff
 
 __precompile__(true)
 
-include("allmodules.jl")
+include("MatHeatDiffModule.jl")
+include("FEMMHeatDiffModule.jl")
+include("FEMMHeatDiffSurfModule.jl")
+include("AlgoHeatDiffModule.jl")
 
 # Exports follow:
 
