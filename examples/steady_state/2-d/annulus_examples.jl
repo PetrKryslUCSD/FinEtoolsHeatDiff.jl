@@ -1,5 +1,6 @@
 module annulus_examples
 using FinEtools
+using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using LinearAlgebra: cholesky
@@ -16,7 +17,7 @@ function annulus_Q4_example()
     magn = 0.06;# heat flux along the boundary
     rin =  1.0;#internal radius
     rex =  2.0;#external radius
-    nr = 10; nc = 80;
+    nr = 10; nc = 80;1
     Angle = 2*pi;
     thickness =  1.0;
     tolerance = min(rin/nr,  rin/nc/2/pi)/10000;
@@ -52,12 +53,7 @@ function annulus_Q4_example()
     fi = ForceIntensity(FFlt[+magn]);#leaving the domain
     @time F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
-    @time F3 = nzebcloadsconductivity(femm,  geom,  Temp);
-
-
-    @time K = cholesky(K)
-    @time U = K\(F1+F2+F3)
-    @time scattersysvec!(Temp, U[:])
+    @time solve!(Temp, K, F1+F2)
 
     println("Total time elapsed = ", time() - t0, "s")
 
@@ -185,12 +181,7 @@ function annulus_Q8_example()
     fi = ForceIntensity(FFlt[+magn]);#leaving the domain
     @time F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
-    @time F3 = nzebcloadsconductivity(femm,  geom,  Temp);
-
-
-    @time K = cholesky(K)
-    @time U = K\(F1+F2+F3)
-    @time scattersysvec!(Temp, U[:])
+    @time solve!(Temp, K, F1+F2)
 
     println("Total time elapsed = ", time() - t0, "s")
 
