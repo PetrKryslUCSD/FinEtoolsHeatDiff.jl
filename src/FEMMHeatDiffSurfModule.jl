@@ -33,7 +33,7 @@ function FEMMHeatDiffSurf(integdomain::ID) where {ID<:IntegDomain}
 end
 
 """
-    surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, FloatT}
+    surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{GFloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
 
 Compute the surface heat transfer matrix.
 
@@ -43,17 +43,17 @@ Compute the surface heat transfer matrix.
 - `geom` = geometry field,
 - `temp` = temperature field
 """
-function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{FloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, FloatT}
+function surfacetransfer(self::FEMMHeatDiffSurf,  assembler::A, geom::NodalField{GFloatT}, temp::NodalField{FloatT})  where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
     return bilform_dot(self, assembler, geom, temp, DataCache(self.surfacetransfercoeff); m = 2); # two dimensional, surface, domain
 end
 
-function surfacetransfer(self::FEMMHeatDiffSurf, geom::NodalField{FloatT}, temp::NodalField{FloatT}) where {FloatT}
+function surfacetransfer(self::FEMMHeatDiffSurf, geom::NodalField{GFloatT}, temp::NodalField{FloatT}) where {GFloatT, FloatT}
     assembler = SysmatAssemblerSparseSymm()
     return  surfacetransfer(self, assembler, geom, temp);
 end
 
 """
-    surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, FloatT}
+    surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{GFloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, GFloatT, FloatT}
 
 Compute the load vector corresponding to surface heat transfer.
 
@@ -64,7 +64,7 @@ Compute the load vector corresponding to surface heat transfer.
 - `temp` = temperature field
 - `ambtemp` = ambient temperature field on the surface
 """
-function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{FloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, FloatT}
+function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::NodalField{GFloatT}, temp::NodalField{FloatT},  ambtemp::NodalField{FloatT}) where {A<:AbstractSysvecAssembler, GFloatT, FloatT}
     fes = self.integdomain.fes
     # Constants
     nfes = count(fes); # number of finite elements in the set
@@ -103,10 +103,7 @@ function surfacetransferloads(self::FEMMHeatDiffSurf,  assembler::A,  geom::Noda
     return F
 end
 
-function surfacetransferloads(self::FEMMHeatDiffSurf,
-                                        geom::NodalField{FloatT},
-                                        temp::NodalField{FloatT},
-                                        ambtemp::NodalField{FloatT}) where {FloatT}
+function surfacetransferloads(self::FEMMHeatDiffSurf, geom::NodalField{GFloatT}, temp::NodalField{FloatT}, ambtemp::NodalField{FloatT}) where {GFloatT, FloatT}
     assembler = SysvecAssembler()
     return  surfacetransferloads(self, assembler, geom, temp, ambtemp);
 end
