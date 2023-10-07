@@ -43,7 +43,7 @@ function FEMMHeatDiff(integdomain::IntegDomain{S, F}, material::M) where {S<:Abs
     return FEMMHeatDiff(integdomain, CSys(manifdim(integdomain.fes)), material)
 end
 
-function  _buffers1(self::FEMMHeatDiff, geom::NodalField{GFloatT}, temp::NodalField{FloatT}) where {GFloatT, FloatT}
+function  _buffers1(self::FEMMHeatDiff, geom::NodalField{GFT}, temp::NodalField{FT}) where {GFT, FT}
     # Constants
     fes = self.integdomain.fes
     IntT = eltype(temp.dofnums)
@@ -53,22 +53,22 @@ function  _buffers1(self::FEMMHeatDiff, geom::NodalField{GFloatT}, temp::NodalFi
     sdim = ndofs(geom);   # number of space dimensions
     mdim = manifdim(fes); # manifold dimension of the element
     Kedim = ndn*nne;      # dimension of the element matrix
-    ecoords = fill(zero(FloatT), nne, ndofs(geom)); # array of Element coordinates
-    elmat = fill(zero(FloatT), Kedim, Kedim); # buffer
-    elvec = fill(zero(FloatT), Kedim); # buffer
-    elvecfix = fill(zero(FloatT), Kedim); # buffer
+    ecoords = fill(zero(FT), nne, ndofs(geom)); # array of Element coordinates
+    elmat = fill(zero(FT), Kedim, Kedim); # buffer
+    elvec = fill(zero(FT), Kedim); # buffer
+    elvecfix = fill(zero(FT), Kedim); # buffer
     dofnums = fill(zero(IntT), Kedim); # buffer
-    loc = fill(zero(FloatT), 1, sdim); # buffer
-    J = fill(zero(FloatT), sdim, mdim); # buffer
-    RmTJ = fill(zero(FloatT), mdim, mdim); # buffer
-    gradN = fill(zero(FloatT), nne, mdim); # buffer
-    kappa_bar = fill(zero(FloatT), mdim, mdim); # buffer
-    kappa_bargradNT = fill(zero(FloatT), mdim, nne); # buffer
+    loc = fill(zero(FT), 1, sdim); # buffer
+    J = fill(zero(FT), sdim, mdim); # buffer
+    RmTJ = fill(zero(FT), mdim, mdim); # buffer
+    gradN = fill(zero(FT), nne, mdim); # buffer
+    kappa_bar = fill(zero(FT), mdim, mdim); # buffer
+    kappa_bargradNT = fill(zero(FT), mdim, nne); # buffer
     return ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix
 end
 
 """
-    conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
+    conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFT},  temp::NodalField{FT}) where {A<:AbstractSysmatAssembler, GFT, FT}
 
 Compute the conductivity matrix.
 
@@ -78,20 +78,20 @@ Compute the conductivity matrix.
 - `geom` = geometry field,
 - `temp` = temperature field
 """
-function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
+function conductivity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFT},  temp::NodalField{FT}) where {A<:AbstractSysmatAssembler, GFT, FT}
     mdim = manifdim(finite_elements(self))
-    kappa_bar = fill(zero(FloatT), mdim, mdim); # buffer
+    kappa_bar = fill(zero(FT), mdim, mdim); # buffer
     kappa_bar = tangentmoduli!(self.material, kappa_bar)
     return bilform_diffusion(self, assembler, geom, temp, DataCache(kappa_bar));
 end
 
-function conductivity(self::FEMMHeatDiff, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {GFloatT, FloatT}
+function conductivity(self::FEMMHeatDiff, geom::NodalField{GFT},  temp::NodalField{FT}) where {GFT, FT}
     assembler = SysmatAssemblerSparseSymm();
     return conductivity(self, assembler, geom, temp);
 end
 
 """
-    energy(self::FEMMHeatDiff, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {GFloatT, FloatT}
+    energy(self::FEMMHeatDiff, geom::NodalField{GFT},  temp::NodalField{FT}) where {GFT, FT}
 
 Compute the "energy" integral over the interior domain.
 
@@ -103,7 +103,7 @@ and the heat flux.
 - `geom` = geometry field,
 - `temp` = temperature field
 """
-function energy(self::FEMMHeatDiff, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {GFloatT, FloatT}
+function energy(self::FEMMHeatDiff, geom::NodalField{GFT},  temp::NodalField{FT}) where {GFT, FT}
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     # Prepare assembler and buffers
@@ -132,7 +132,7 @@ function energy(self::FEMMHeatDiff, geom::NodalField{GFloatT},  temp::NodalField
 end
 
 """
-    inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFloatT}, u::NodalField{T}, temp::NodalField{FloatT}, felist::VecOrMat{IntT}, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, GFloatT, FloatT, IntT, F<:Function}
+    inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFT}, u::NodalField{T}, temp::NodalField{FT}, felist::VecOrMat{IntT}, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, GFT, FT, IntT, F<:Function}
 
 Inspect integration point quantities.
 
@@ -154,7 +154,7 @@ Inspect integration point quantities.
 # Output
 The updated inspector data is returned.
 """
-function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFloatT}, u::NodalField{T}, temp::NodalField{FloatT}, felist::VecOrMat{IntT}, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, GFloatT, FloatT, IntT, F<:Function}
+function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFT}, u::NodalField{T}, temp::NodalField{FT}, felist::VecOrMat{IntT}, inspector::F, idat, quantity=:heatflux; context...) where {T<:Number, GFT, FT, IntT, F<:Function}
     fes = self.integdomain.fes
     npts,  Ns,  gradNparams,  w,  pc = integrationdata(self.integdomain);
     ecoords, dofnums, loc, J, RmTJ, gradN, kappa_bar, kappa_bargradNT, elmat, elvec, elvecfix = _buffers1(self, geom, temp)
@@ -170,13 +170,13 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFloatT}, u::No
     end
     t= 0.0
     dt = 0.0
-    Te = fill(zero(FloatT), nodesperelem(fes)) # nodal temperatures -- buffer
+    Te = fill(zero(FT), nodesperelem(fes)) # nodal temperatures -- buffer
     nne = nodesperelem(fes); # number of nodes for element
     sdim = ndofs(geom);            # number of space dimensions
-    qpgradT = fill(zero(FloatT), 1, sdim); # Temperature gradient -- buffer
-    qpflux = fill(zero(FloatT), sdim); # thermal strain -- buffer
-    out1 = fill(zero(FloatT), sdim); # output -- buffer
-    out =  fill(zero(FloatT), sdim);# output -- buffer
+    qpgradT = fill(zero(FT), 1, sdim); # Temperature gradient -- buffer
+    qpflux = fill(zero(FT), sdim); # thermal strain -- buffer
+    out1 = fill(zero(FT), sdim); # output -- buffer
+    out =  fill(zero(FT), sdim);# output -- buffer
     # Loop over  all the elements and all the quadrature points within them
     for ilist  in  1:length(felist) # Loop over elements
         i = felist[ilist];
@@ -203,7 +203,7 @@ function inspectintegpoints(self::FEMMHeatDiff, geom::NodalField{GFloatT}, u::No
 end
 
 """
-    capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
+    capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFT},  temp::NodalField{FT}) where {A<:AbstractSysmatAssembler, GFT, FT}
 
 Compute the capacity matrix.
 
@@ -213,11 +213,11 @@ Compute the capacity matrix.
 - `geom` = geometry field,
 - `temp` = temperature field
 """
-function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {A<:AbstractSysmatAssembler, GFloatT, FloatT}
+function capacity(self::FEMMHeatDiff,  assembler::A, geom::NodalField{GFT},  temp::NodalField{FT}) where {A<:AbstractSysmatAssembler, GFT, FT}
     return bilform_dot(self, assembler, geom, temp, DataCache(self.material.specific_heat))
 end
 
-function capacity(self::FEMMHeatDiff, geom::NodalField{GFloatT},  temp::NodalField{FloatT}) where {GFloatT, FloatT}
+function capacity(self::FEMMHeatDiff, geom::NodalField{GFT},  temp::NodalField{FT}) where {GFT, FT}
     assembler = SysmatAssemblerSparseSymm();
     return capacity(self, assembler, geom, temp);
 end

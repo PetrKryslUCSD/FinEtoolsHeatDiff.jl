@@ -9,55 +9,55 @@ import FinEtools.MatModule: AbstractMat
 using FinEtools.MatrixUtilityModule: mulCAB!
 
 """
-    MatHeatDiff{FloatT, MTAN<:Function, MUPD<:Function} <: AbstractMat
+    MatHeatDiff{FT, MTAN<:Function, MUPD<:Function} <: AbstractMat
 
 Type of material model for heat diffusion.
 """
-struct MatHeatDiff{FloatT, MTAN<:Function, MUPD<:Function} <: AbstractMat
-	thermal_conductivity::Array{FloatT, 2};# Thermal conductivity
-	specific_heat::FloatT;# Specific heat per unit volume
-	mass_density::FloatT # mass density
+struct MatHeatDiff{FT, MTAN<:Function, MUPD<:Function} <: AbstractMat
+	thermal_conductivity::Array{FT, 2};# Thermal conductivity
+	specific_heat::FT;# Specific heat per unit volume
+	mass_density::FT # mass density
 	tangentmoduli!::MTAN
 	update!::MUPD
 end
 
 """
-    MatHeatDiff(thermal_conductivity::Matrix{FloatT}) where {FloatT}
+    MatHeatDiff(thermal_conductivity::Matrix{FT}) where {FT}
 
 Construct material model for heat diffusion.
 
 Supply the matrix of thermal conductivity constants.
 """
-function MatHeatDiff(thermal_conductivity::Matrix{FloatT}) where {FloatT}
-    return MatHeatDiff(thermal_conductivity, zero(FloatT), zero(FloatT), tangentmoduli!, update!)
+function MatHeatDiff(thermal_conductivity::Matrix{FT}) where {FT}
+    return MatHeatDiff(thermal_conductivity, zero(FT), zero(FT), tangentmoduli!, update!)
 end
 
 """
-    MatHeatDiff(thermal_conductivity::Matrix{FloatT}, specific_heat::FloatT) where {FloatT}
+    MatHeatDiff(thermal_conductivity::Matrix{FT}, specific_heat::FT) where {FT}
 
 Construct material model for heat diffusion.
 
 Supply the matrix of thermal conductivity constants.
 """
-function MatHeatDiff(thermal_conductivity::Matrix{FloatT}, specific_heat::FloatT) where {FloatT}
-    return MatHeatDiff(thermal_conductivity, specific_heat, zero(FloatT), tangentmoduli!, update!)
+function MatHeatDiff(thermal_conductivity::Matrix{FT}, specific_heat::FT) where {FT}
+    return MatHeatDiff(thermal_conductivity, specific_heat, zero(FT), tangentmoduli!, update!)
 end
 
 """
-    tangentmoduli!(self::MatHeatDiff, kappabar::Matrix{FloatT}, t = zero(FloatT), dt = zero(FloatT), loc::Matrix{FloatT} = reshape(FloatT[],0,0), label = 0) where {FloatT}
+    tangentmoduli!(self::MatHeatDiff, kappabar::Matrix{FT}, t = zero(FT), dt = zero(FT), loc::Matrix{FT} = reshape(FT[],0,0), label = 0) where {FT}
 
 Calculate the thermal conductivity matrix.
 
 - `kappabar` = matrix of thermal conductivity (tangent moduli) in material
   coordinate system, supplied as a buffer and overwritten.
 """
-function tangentmoduli!(self::MatHeatDiff, kappabar::Matrix{FloatT}, t = zero(FloatT), dt = zero(FloatT), loc::Matrix{FloatT} = reshape(FloatT[],0,0), label = 0) where {FloatT}
+function tangentmoduli!(self::MatHeatDiff, kappabar::Matrix{FT}, t = zero(FT), dt = zero(FT), loc::Matrix{FT} = reshape(FT[],0,0), label = 0) where {FT}
     copyto!(kappabar, self.thermal_conductivity);
     return kappabar
 end
 
 """
-    update!(self::MatHeatDiff, heatflux::Vector{FloatT}, output::Vector{FloatT}, gradT::Vector{FloatT}, t= zero(FloatT), dt= zero(FloatT), loc::Matrix{FloatT}=reshape(FloatT[],0,0), label=0, quantity=:nothing) where {FloatT}
+    update!(self::MatHeatDiff, heatflux::Vector{FT}, output::Vector{FT}, gradT::Vector{FT}, t= zero(FT), dt= zero(FT), loc::Matrix{FT}=reshape(FT[],0,0), label=0, quantity=:nothing) where {FT}
 
 Update material state.
 
@@ -75,7 +75,7 @@ Update material state.
   calculated and stored in the `heatflux` vector.
 - `output` =  array which is (if necessary) allocated  in an appropriate size, filled with the output quantity, and returned.
 """
-function update!(self::MatHeatDiff, heatflux::Vector{FloatT}, output::Vector{FloatT}, gradT::Vector{FloatT}, t= zero(FloatT), dt= zero(FloatT), loc::Matrix{FloatT}=reshape(FloatT[],0,0), label=0, quantity=:nothing) where {FloatT}
+function update!(self::MatHeatDiff, heatflux::Vector{FT}, output::Vector{FT}, gradT::Vector{FT}, t= zero(FT), dt= zero(FT), loc::Matrix{FT}=reshape(FT[],0,0), label=0, quantity=:nothing) where {FT}
 	sdim = size(self.thermal_conductivity, 2)
     @assert length(heatflux) == sdim
     mulCAB!(heatflux, self.thermal_conductivity, -gradT);
