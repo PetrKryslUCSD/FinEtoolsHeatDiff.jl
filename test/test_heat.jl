@@ -19,7 +19,7 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
 
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
@@ -52,7 +52,7 @@ function test()
   # println("Conductivity")
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -85,6 +85,7 @@ mmmmPoiss_06122017.test()
 
 module mmmmannulus_Q4_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -121,7 +122,7 @@ function test()
   # Side 1
   l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
   el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-  fi = ForceIntensity(FFlt[-magn]);#entering the domain
+  fi = ForceIntensity(Float64[-magn]);#entering the domain
   flux1 = FDataDict("femm"=>el1femm, "normal_flux"=>-magn) # entering the domain
   # Side 2
   l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
@@ -182,8 +183,8 @@ function test()
   t0 = time()
 
   A = 1.0
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = -6.0; #heat source
     return forceout
   end
@@ -220,7 +221,7 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  fi = ForceIntensity(FFlt, 1, getsource!);
+  fi = ForceIntensity(Float64, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   # println("Factorization")
@@ -257,12 +258,13 @@ mmmmmPoisson_FE_Q4_1.test()
 
 module mmmmmPoisson_FE_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
     A= 1.0
-    thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+    thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
     magn = -6.0; #heat source
     truetempf(x) = (1.0 .+ x[1].^2 .+ 2*x[2].^2);#the exact distribution of temperature
     N=20;
@@ -344,9 +346,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -385,7 +387,7 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
 
@@ -414,6 +416,7 @@ mmmmmPoissonRm2.test()
 
 module mmmmmmmmmNAFEMSm
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -466,7 +469,7 @@ function test()
   m = MatHeatDiff(kappa)
 
   modeldata = nothing
-  resultsTempA = FFlt[]
+  resultsTempA = Float64[]
   for nref = 1:5
     t0 = time()
 
@@ -596,6 +599,7 @@ mmmmmmmmmNAFEMSm.test()
 
 module mmmmmmconvergence
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -648,7 +652,7 @@ function test()
   m = MatHeatDiff(kappa)
 
   modeldata = nothing
-  resultsTempA = FFlt[]
+  resultsTempA = Float64[]
   for nref = 1:5
     t0 = time()
 
@@ -785,9 +789,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -836,8 +840,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
 
@@ -873,9 +877,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -924,8 +928,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   # println("Factorization")
@@ -964,9 +968,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -1015,8 +1019,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1075,7 +1079,7 @@ function test()
   p1 = 1*2;
   p2 = 1*2;
   p3 = 1*2;
-  kappa = 157*[i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
+  kappa = 157*[i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
   DV = 5*phun("V"); # voltage drop in volt
   l  = 2*(y1+y2)/2+2*(x1+x2)/2; # length of the conductor
   resistivity  =  1.1e-5*phun("Ohm*m"); # Ohm m
@@ -1128,7 +1132,7 @@ function test()
 
   K = conductivity(hotfemm, geom, Temp) +
   conductivity(coldfemm, geom, Temp)
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F = distribloads(hotfemm, geom, Temp, fi, 3)
 
 
@@ -1196,7 +1200,7 @@ function test()
   p1 = 1*2;
   p2 = 1*2;
   p3 = 1*2;
-  kappa = 157*[i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
+  kappa = 157*[i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
   DV = 5*phun("V"); # voltage drop in volt
   l  = 2*(y1+y2)/2+2*(x1+x2)/2; # length of the conductor
   resistivity  =  1.1e-5*phun("Ohm*m"); # Ohm m
@@ -1251,7 +1255,7 @@ function test()
 
   K = conductivity(hotfemm, geom, Temp) +
   conductivity(coldfemm, geom, Temp)
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F = distribloads(hotfemm, geom, Temp, fi, 3)
 
 
@@ -1305,9 +1309,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -1343,7 +1347,7 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  fi = ForceIntensity(FFlt, 1, getsource!);
+  fi = ForceIntensity(Float64, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
 
@@ -1412,7 +1416,7 @@ function test()
 
 
   l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-  setebc!(Temp, l1, 1, zero(FFlt))
+  setebc!(Temp, l1, 1, zero(Float64))
   applyebc!(Temp)
 
   numberdofs!(Temp)
@@ -1425,12 +1429,12 @@ function test()
 
   l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
   el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-  fi = ForceIntensity(FFlt[-magn]);#entering the domain
+  fi = ForceIntensity(Float64[-magn]);#entering the domain
   F1 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
   l1 = selectelem(fens, edge_fes, box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
   el1femm =  FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-  fi = ForceIntensity(FFlt[+magn]);#leaving the domain
+  fi = ForceIntensity(Float64[+magn]);#leaving the domain
   F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
 
@@ -1488,7 +1492,7 @@ function test()
 
   cfemm = FEMMHeatDiffSurf(IntegDomain(bfes, GaussRule(1, 2), Dz), h)
   femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1), Dz), m)
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
   K = conductivity(femm, geom, Temp)
 
@@ -1536,9 +1540,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -1575,8 +1579,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1631,8 +1635,8 @@ function test()
   t0 = time()
 
   A = 1.0
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = -6.0; #heat source
     return forceout
   end
@@ -1668,8 +1672,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt, 1, getsource!);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1717,9 +1721,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     return forceout
   end
@@ -1769,8 +1773,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt, 1, getsource!);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1818,8 +1822,8 @@ function test()
   t0 = time()
 
   A = 1.0
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = -6.0; #heat source
     return forceout
   end
@@ -1856,8 +1860,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt, 1, getsource!);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64, 1, getsource!);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1918,8 +1922,8 @@ function test()
         t0 = time()
 
         A = 1.0
-        thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-        function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+        thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
+        function getsource!(forceout, XYZ, tangents, feid, qpid)
             forceout[1] = -6.0; #heat source
             return forceout
         end
@@ -1954,8 +1958,8 @@ function test()
         # println("Nonzero EBC")
 
         # println("Internal heat generation")
-        # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-        fi = ForceIntensity(FFlt, 1, getsource!);
+        # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+        fi = ForceIntensity(Float64, 1, getsource!);
         F1 = distribloads(femm, geom, Temp, fi, 3);
 
         K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -1994,6 +1998,7 @@ mPoisson_FE_T3_orientations.test()
 
 module mmT129b_l2_uqm
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -2026,7 +2031,7 @@ function test()
 
 
 
-    fi = ForceIntensity(FFlt[Q]);
+    fi = ForceIntensity(Float64[Q]);
     F1 = distribloads(femm, geom, Temp, fi, 3);
 
     K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -2046,6 +2051,7 @@ mmT129b_l2_uqm.test()
 
 module mmannulusconv1
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
@@ -2139,9 +2145,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+  function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
   end
   N = 100;# number of subdivisions along the sides of the square domain
@@ -2175,8 +2181,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -2202,12 +2208,13 @@ mmmmPoiss_energy.test()
 
 module mQPoisson_FE_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 function test()
     A= 1.0
-    thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+    thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
     magn = (forceout, XYZ, tangents, feid, qpid) -> (forceout[1] = -6.0; forceout) #heat source
     truetempf(x) = (1.0 .+ x[1].^2 .+ 2*x[2].^2);#the exact distribution of temperature
     N=20;
@@ -2272,6 +2279,7 @@ mQPoisson_FE_example_algo.test()
 
 module mconvfunNAFEMSm
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -2324,7 +2332,7 @@ function test()
   m = MatHeatDiff(kappa)
 
   modeldata = nothing
-  resultsTempA = FFlt[]
+  resultsTempA = Float64[]
   for nref = 1:5
     t0 = time()
 
@@ -2454,6 +2462,7 @@ mconvfunNAFEMSm.test()
 
 module mfluxannulus_Q4_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -2490,7 +2499,7 @@ function test()
   # Side 1
   l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
   el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-  fi = ForceIntensity(FFlt[-magn]);#entering the domain
+  fi = ForceIntensity(Float64[-magn]);#entering the domain
   flux1 = FDataDict("femm"=>el1femm, "normal_flux"=>(forceout, XYZ, tangents, feid, qpid) -> (forceout[1] = -magn; forceout)) # entering the domain
   # Side 2
   l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
@@ -2533,15 +2542,16 @@ mfluxannulus_Q4_example_algo.test()
 
 module mmmmPoiss_trirules
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
 import LinearAlgebra: cholesky
 function test()
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+    thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
     Q = -6.0; # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
     forceout[1] = Q; #heat source
     end
     tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
@@ -2566,7 +2576,7 @@ function test()
     for NPTS = [1, 3, 4, 6, 7, 9, 12, 13]
         femm = FEMMHeatDiff(IntegDomain(fes, TriRule(NPTS), 100.), material)
         K = conductivity(femm, geom, Temp)
-        fi = ForceIntensity(FFlt[Q]);
+        fi = ForceIntensity(Float64[Q]);
         F1 = distribloads(femm, geom, Temp, fi, 3);
         K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
         F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -2593,7 +2603,7 @@ using Test
 import LinearAlgebra: cholesky
 function test()
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+    thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
     Q = -6.0; # internal heat generation rate
 
     tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
@@ -2618,7 +2628,7 @@ function test()
     for NPTS = 2:10
         femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, NPTS), 100.), material)
         K = conductivity(femm, geom, Temp)
-        fi = ForceIntensity(FFlt[Q]);
+        fi = ForceIntensity(Float64[Q]);
         F1 = distribloads(femm, geom, Temp, fi, 3);
         K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
         F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -2659,9 +2669,9 @@ function test()
   t0 = time()
 
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = -6.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   tempf(x) = (1.0 .+ x[:,1].^2 .+ 2*x[:,2].^2);#the exact distribution of temperature
@@ -2696,8 +2706,8 @@ function test()
   # println("Nonzero EBC")
 
   # println("Internal heat generation")
-  # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-  fi = ForceIntensity(FFlt[Q]);
+  # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
@@ -2749,9 +2759,9 @@ using Test
 import LinearAlgebra: cholesky, norm
 function test()
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = 0.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   gradtemp = [2.0, -0.5]
@@ -2777,7 +2787,7 @@ function test()
 
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
   F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -2823,9 +2833,9 @@ using Test
 import LinearAlgebra: cholesky, norm
 function test()
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = 0.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   gradtemp = [2.0, -0.5]
@@ -2856,7 +2866,7 @@ function test()
 
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -2900,9 +2910,9 @@ using Test
 import LinearAlgebra: cholesky, norm
 function test()
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = 0.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   gradtemp = [2.0, -0.5]
@@ -2933,7 +2943,7 @@ function test()
 
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
   F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -2980,9 +2990,9 @@ using Test
 import LinearAlgebra: cholesky, norm
 function test()
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = 0.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   gradtemp = [2.0, -0.5]
@@ -3013,7 +3023,7 @@ function test()
 
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
   F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -3057,9 +3067,9 @@ using Test
 import LinearAlgebra: cholesky, norm, dot
 function test()
   A = 1.0 # dimension of the domain (length of the side of the square)
-  thermal_conductivity = [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+  thermal_conductivity = [i==j ? one(Float64) : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
   Q = 0.0; # internal heat generation rate
-  function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+  function getsource!(forceout, XYZ, tangents, fe_label)
     forceout[1] = Q; #heat source
   end
   gradtemp = [2.0, -0.5]
@@ -3090,7 +3100,7 @@ function test()
 
   K = conductivity(femm, geom, Temp)
 
-  fi = ForceIntensity(FFlt[Q]);
+  fi = ForceIntensity(Float64[Q]);
   F1 = distribloads(femm, geom, Temp, fi, 3);
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
   F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
@@ -3114,6 +3124,7 @@ mmblock_Energy_2.test()
 
 module mannulus_T3_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -3150,7 +3161,7 @@ function test()
   # Side 1
   l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
   el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-  fi = ForceIntensity(FFlt[-magn]);#entering the domain
+  fi = ForceIntensity(Float64[-magn]);#entering the domain
   flux1 = FDataDict("femm"=>el1femm, "normal_flux"=>-magn) # entering the domain
   # Side 2
   l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
@@ -3193,6 +3204,7 @@ mannulus_T3_example_algo.test()
 
 module mannulus_T6_example_algo
 using FinEtools
+using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using Test
@@ -3229,7 +3241,7 @@ function test()
   # Side 1
   l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
   el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 3)))
-  fi = ForceIntensity(FFlt[-magn]);#entering the domain
+  fi = ForceIntensity(Float64[-magn]);#entering the domain
   flux1 = FDataDict("femm"=>el1femm, "normal_flux"=>-magn) # entering the domain
   # Side 2
   l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
@@ -3307,7 +3319,7 @@ function test()
 
 
 	l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-	setebc!(EBCTemp, l1, 1, zero(FFlt))
+	setebc!(EBCTemp, l1, 1, zero(Float64))
 	applyebc!(EBCTemp)
 
 	numberdofs!(EBCTemp)
@@ -3325,12 +3337,12 @@ function test()
 
 	l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
 	el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-	fi = ForceIntensity(FFlt[-magn]);#entering the domain
+	fi = ForceIntensity(Float64[-magn]);#entering the domain
 	F1 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
 	l1 = selectelem(fens, edge_fes, box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
 	el1femm =  FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-	fi = ForceIntensity(FFlt[+magn]);#leaving the domain
+	fi = ForceIntensity(Float64[+magn]);#leaving the domain
 	F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
 
 	# F3 = nzebcloadsconductivity(femm,  geom,  Temp);
@@ -3396,7 +3408,7 @@ function test()
 	p1 = 1*2;
 	p2 = 1*2;
 	p3 = 1*2;
-	kappa = 157*[i==j ? one(FFlt) : zero(FFlt) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
+	kappa = 157*[i==j ? one(Float64) : zero(Float64) for i=1:3, j=1:3]*phun("W/m/K"); # W/m/K, conductivity matrix
 	DV = 5*phun("V"); # voltage drop in volt
 	l  = 2*(y1+y2)/2+2*(x1+x2)/2; # length of the conductor
 	resistivity  =  1.1e-5*phun("Ohm*m"); # Ohm m
@@ -3451,7 +3463,7 @@ function test()
 	numberdofs!(Temp)
 
 	K = conductivity(hotfemm, geom, Temp) +	conductivity(coldfemm, geom, Temp)
-	fi = ForceIntensity(FFlt[Q]);
+	fi = ForceIntensity(Float64[Q]);
 	F = distribloads(hotfemm, geom, Temp, fi, 3);
 	# nzebcloadsconductivity(hotfemm, geom, Temp) +
 	# nzebcloadsconductivity(coldfemm, geom, Temp)
@@ -3510,7 +3522,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    setebc!(Temp, l1, 1, zero(Float64))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -3555,7 +3567,7 @@ function test()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    setebc!(Temp, l1, 1, zero(Float64))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -3585,7 +3597,7 @@ using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky, mul!, lu, norm
 using Test
 function test()
-	thermal_conductivity =  [i==j ? 0.2 : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
+	thermal_conductivity =  [i==j ? 0.2 : zero(Float64) for i=1:2, j=1:2]; # conductivity matrix
 	Width = 60.0
 	Height = 40.0
 	N = 50
