@@ -226,8 +226,10 @@ function test()
 
   # println("Factorization")
 
-  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))[(:ff, :fd)]
-  F_f = vector_blocked((F1), nfreedofs(Temp), (:f, ))[:f]
+  K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp))[(:ff, :fd)]
+    # @show   typeof(K_ff), typeof(K_fd)
+  F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
+  # @show typeof(F_f)
   T_d = gathersysvec(Temp, :d)
 
   T_f = K_ff\(F_f - K_fd * T_d)
