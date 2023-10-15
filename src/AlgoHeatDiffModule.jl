@@ -186,7 +186,7 @@ function steadystate(modeldata::FDataDict)
     end
 
     # Solve for the temperatures
-    K_ff, K_fd = matrix_blocked(K, nfreedofs(temp), nfreedofs(temp))[(:ff, :fd)]
+    K_ff, K_fd = matrix_blocked(K, nfreedofs(temp))[(:ff, :fd)]
     F_f = vector_blocked(F, nfreedofs(temp))[:f]
     T_d = gathersysvec(temp, :d)
 
