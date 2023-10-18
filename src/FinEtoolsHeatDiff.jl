@@ -22,11 +22,13 @@ using FinEtoolsHeatDiff.MatHeatDiffModule: MatHeatDiff
 # Exported: type of heat-diffusion  material
 export MatHeatDiff
 
-using FinEtoolsHeatDiff.FEMMHeatDiffModule: FEMMHeatDiff, conductivity, energy, inspectintegpoints, capacity
+using FinEtoolsHeatDiff.FEMMHeatDiffModule: FEMMHeatDiff,
+    conductivity, energy, inspectintegpoints, capacity
 # Exported: type  for linear heat diffusion and discretization methods
 export FEMMHeatDiff, conductivity, energy, inspectintegpoints, capacity
 
-using FinEtoolsHeatDiff.FEMMHeatDiffSurfModule: FEMMHeatDiffSurf, surfacetransfer, surfacetransferloads
+using FinEtoolsHeatDiff.FEMMHeatDiffSurfModule: FEMMHeatDiffSurf,
+    surfacetransfer, surfacetransferloads
 # Exported: type  for linear heat diffusion boundary conditions and discretization methods
 export FEMMHeatDiffSurf, surfacetransfer, surfacetransferloads
 

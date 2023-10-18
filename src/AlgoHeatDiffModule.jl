@@ -8,7 +8,8 @@ module AlgoHeatDiffModule
 using FinEtools.FTypesModule: FDataDict
 using FinEtools.AlgoBaseModule: dcheck!
 using FinEtools.AlgoBaseModule: matrix_blocked, vector_blocked
-using FinEtools.FieldModule: ndofs, setebc!, numberdofs!, applyebc!, scattersysvec!, nalldofs, nfreedofs, gathersysvec
+using FinEtools.FieldModule: ndofs,
+    setebc!, numberdofs!, applyebc!, scattersysvec!, nalldofs, nfreedofs, gathersysvec
 using FinEtools.NodalFieldModule: NodalField, nnodes
 using FinEtools.FEMMBaseModule: associategeometry!, distribloads
 using FinEtools.ForceIntensityModule: ForceIntensity
@@ -65,7 +66,13 @@ would hold
 """
 function steadystate(modeldata::FDataDict)
     # Lists of recognized keys for the data dictionaries:
-    modeldata_recognized_keys = ["fens", "regions", "essential_bcs", "convection_bcs", "flux_bcs"]
+    modeldata_recognized_keys = [
+        "fens",
+        "regions",
+        "essential_bcs",
+        "convection_bcs",
+        "flux_bcs",
+    ]
     essential_bcs_recognized_keys = ["temperature", "node_list"]
     convection_bcs_recognized_keys = ["femm", "ambient_temperature"]
     flux_bcs_recognized_keys = ["femm", "normal_flux"]
@@ -75,36 +82,36 @@ function steadystate(modeldata::FDataDict)
     dcheck!(modeldata, modeldata_recognized_keys)
 
     # Extract the nodes
-    fens = get(()->error("Must get finite element nodes (fens)!"), modeldata, "fens")
+    fens = get(() -> error("Must get finite element nodes (fens)!"), modeldata, "fens")
 
     # Construct the geometry field
     geom = NodalField(fens.xyz)
 
     # Construct the temperature field
-    temp = NodalField(zeros(size(fens.xyz,1),1))
+    temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     FT = eltype(temp.values)
 
     # Apply the essential boundary conditions on the temperature field
-    essential_bcs = get(modeldata, "essential_bcs", nothing);
+    essential_bcs = get(modeldata, "essential_bcs", nothing)
     if (essential_bcs != nothing)
-        for j = 1:length(essential_bcs)
+        for j in 1:length(essential_bcs)
             ebc = essential_bcs[j]
             dcheck!(ebc, essential_bcs_recognized_keys)
-            fenids = get(()->error("Must get node list!"), ebc, "node_list");
-            temperature = get(ebc, "temperature", nothing);
-            T_fixed = zeros(FT,length(fenids)); # default is  zero temperature
+            fenids = get(() -> error("Must get node list!"), ebc, "node_list")
+            temperature = get(ebc, "temperature", nothing)
+            T_fixed = zeros(FT, length(fenids)) # default is  zero temperature
             if (temperature != nothing) # if it is nonzero,
                 if (typeof(temperature) <: Function) # it could be a function
-                    for k = 1:length(fenids)
-                        T_fixed[k] = temperature(geom.values[fenids[k],:]);
+                    for k in 1:length(fenids)
+                        T_fixed[k] = temperature(geom.values[fenids[k], :])
                     end
                 else # or it could be a constant
-                    fill!(T_fixed, temperature);
+                    fill!(T_fixed, temperature)
                 end
             end
-            setebc!(temp, fenids[:], true, 1, T_fixed);
-            applyebc!(temp);
+            setebc!(temp, fenids[:], true, 1, T_fixed)
+            applyebc!(temp)
         end
     end
 
@@ -112,76 +119,76 @@ function steadystate(modeldata::FDataDict)
     numberdofs!(temp)           #,Renumbering_options); # NOT DONE
 
     # Initialize the heat loads vector
-    F = zeros(FT, nalldofs(temp));
+    F = zeros(FT, nalldofs(temp))
 
     # Construct the system conductivity matrix
-    K = spzeros(nalldofs(temp), nalldofs(temp)); # (all zeros, for the moment)
-    regions = get(()->error("Must get regions!"), modeldata, "regions")
-    for i = 1:length(regions)
+    K = spzeros(nalldofs(temp), nalldofs(temp)) # (all zeros, for the moment)
+    regions = get(() -> error("Must get regions!"), modeldata, "regions")
+    for i in 1:length(regions)
         region = regions[i]
         dcheck!(region, regions_recognized_keys)
-        femm = region["femm"];
+        femm = region["femm"]
         # Add up all the conductivity matrices for all the regions
-        K = K + conductivity(femm, geom, temp);
-        Q = get(region, "Q", [0.0]);
+        K = K + conductivity(femm, geom, temp)
+        Q = get(region, "Q", [0.0])
         if (typeof(Q) <: Function)
-            fi = ForceIntensity(FT, 1, Q);
+            fi = ForceIntensity(FT, 1, Q)
         else
-            fi = ForceIntensity(Q);
+            fi = ForceIntensity(Q)
         end
-        F = F + distribloads(femm, geom, temp, fi, 3);
+        F = F + distribloads(femm, geom, temp, fi, 3)
     end
 
     # Process the convection boundary condition
-    convection_bcs = get(modeldata, "convection_bcs", nothing);
+    convection_bcs = get(modeldata, "convection_bcs", nothing)
     if (convection_bcs != nothing)
-        amb = deepcopy(temp); # create the ambient temperature field
-        for i = 1:length(convection_bcs)
+        amb = deepcopy(temp) # create the ambient temperature field
+        for i in 1:length(convection_bcs)
             convbc = convection_bcs[i]
             dcheck!(convbc, convection_bcs_recognized_keys)
-            femm = get(()->error("Must get femm!"), convbc, "femm");
+            femm = get(() -> error("Must get femm!"), convbc, "femm")
             # Apply the prescribed ambient temperature
-            fenids = connectednodes(femm.integdomain.fes);
-            fixed = ones(length(fenids));
-            T_fixed = zeros(FT, length(fenids)); # default is zero
-            ambient_temperature = get(convbc, "ambient_temperature", nothing);
+            fenids = connectednodes(femm.integdomain.fes)
+            fixed = ones(length(fenids))
+            T_fixed = zeros(FT, length(fenids)) # default is zero
+            ambient_temperature = get(convbc, "ambient_temperature", nothing)
             if ambient_temperature != nothing  # if given as nonzero
                 if (typeof(ambient_temperature) <: Function) # given by function
-                    for k = 1:length(fenids)
-                        T_fixed[k] = ambient_temperature(geom.values[fenids[k],:]);
+                    for k in 1:length(fenids)
+                        T_fixed[k] = ambient_temperature(geom.values[fenids[k], :])
                     end
                 else # it could be a constant
-                    fill!(T_fixed, ambient_temperature);
+                    fill!(T_fixed, ambient_temperature)
                 end
             end
-            setebc!(amb, fenids[:], true, 1, T_fixed);
-            applyebc!(amb);
-            femm = convbc["femm"];
-            K = K + surfacetransfer(femm, geom, temp);
-            F = F + surfacetransferloads(femm, geom, temp, amb);
+            setebc!(amb, fenids[:], true, 1, T_fixed)
+            applyebc!(amb)
+            femm = convbc["femm"]
+            K = K + surfacetransfer(femm, geom, temp)
+            F = F + surfacetransferloads(femm, geom, temp, amb)
         end
     end
 
     # # Process the flux boundary condition
-    flux_bcs = get(modeldata, "flux_bcs", nothing);
+    flux_bcs = get(modeldata, "flux_bcs", nothing)
     if (flux_bcs != nothing)
-        for j = 1:length(flux_bcs)
+        for j in 1:length(flux_bcs)
             fluxbc = flux_bcs[j]
             dcheck!(fluxbc, flux_bcs_recognized_keys)
-            normal_flux = fluxbc["normal_flux"];
+            normal_flux = fluxbc["normal_flux"]
             if (typeof(normal_flux) <: Function)
-                fi = ForceIntensity(FT, 1, normal_flux);
+                fi = ForceIntensity(FT, 1, normal_flux)
             else
                 if typeof(normal_flux) <: AbstractArray
                 else
                     normal_flux = FT[normal_flux]
                 end
-                fi = ForceIntensity(normal_flux);
+                fi = ForceIntensity(normal_flux)
             end
             femm = fluxbc["femm"]
             # Note the sign  which reflects the formula (negative sign
             # in front of the integral)
-            F = F - distribloads(femm, geom, temp, fi, 2);
+            F = F - distribloads(femm, geom, temp, fi, 2)
         end
     end
 
@@ -191,17 +198,17 @@ function steadystate(modeldata::FDataDict)
     T_d = gathersysvec(temp, :d)
 
     # Loads due to the essential boundary conditions on the temperature field
-    essential_bcs = get(modeldata, "essential_bcs", nothing);
+    essential_bcs = get(modeldata, "essential_bcs", nothing)
     if (essential_bcs != nothing) # there was at least one EBC applied
-        F_f .+= - K_fd * T_d
+        F_f .+= -K_fd * T_d
     end
 
     T_f = K_ff \ (F_f)
     scattersysvec!(temp, T_f)
 
     # Update the model data
-    setindex!(modeldata, geom, "geom");
-    setindex!(modeldata, temp, "temp");
+    setindex!(modeldata, geom, "geom")
+    setindex!(modeldata, temp, "temp")
     return modeldata            # ... And return the updated model data
 end
 

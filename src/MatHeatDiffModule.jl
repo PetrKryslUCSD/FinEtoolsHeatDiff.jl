@@ -13,12 +13,12 @@ using FinEtools.MatrixUtilityModule: mulCAB!
 
 Type of material model for heat diffusion.
 """
-struct MatHeatDiff{FT, MTAN<:Function, MUPD<:Function} <: AbstractMat
-	thermal_conductivity::Array{FT, 2};# Thermal conductivity
-	specific_heat::FT;# Specific heat per unit volume
-	mass_density::FT # mass density
-	tangentmoduli!::MTAN
-	update!::MUPD
+struct MatHeatDiff{FT, MTAN <: Function, MUPD <: Function} <: AbstractMat
+    thermal_conductivity::Array{FT, 2}# Thermal conductivity
+    specific_heat::FT# Specific heat per unit volume
+    mass_density::FT # mass density
+    tangentmoduli!::MTAN
+    update!::MUPD
 end
 
 """
@@ -40,7 +40,11 @@ Construct material model for heat diffusion.
 Supply the matrix of thermal conductivity constants.
 """
 function MatHeatDiff(thermal_conductivity::Matrix{FT}, specific_heat::FT) where {FT}
-    return MatHeatDiff(thermal_conductivity, specific_heat, zero(FT), tangentmoduli!, update!)
+    return MatHeatDiff(thermal_conductivity,
+        specific_heat,
+        zero(FT),
+        tangentmoduli!,
+        update!)
 end
 
 """
@@ -51,8 +55,13 @@ Calculate the thermal conductivity matrix.
 - `kappabar` = matrix of thermal conductivity (tangent moduli) in material
   coordinate system, supplied as a buffer and overwritten.
 """
-function tangentmoduli!(self::MatHeatDiff, kappabar::Matrix{FT}, t = zero(FT), dt = zero(FT), loc::Matrix{FT} = reshape(FT[],0,0), label = 0) where {FT}
-    copyto!(kappabar, self.thermal_conductivity);
+function tangentmoduli!(self::MatHeatDiff,
+    kappabar::Matrix{FT},
+    t = zero(FT),
+    dt = zero(FT),
+    loc::Matrix{FT} = reshape(FT[], 0, 0),
+    label = 0) where {FT}
+    copyto!(kappabar, self.thermal_conductivity)
     return kappabar
 end
 
@@ -75,15 +84,23 @@ Update material state.
   calculated and stored in the `heatflux` vector.
 - `output` =  array which is (if necessary) allocated  in an appropriate size, filled with the output quantity, and returned.
 """
-function update!(self::MatHeatDiff, heatflux::Vector{FT}, output::Vector{FT}, gradT::Vector{FT}, t= zero(FT), dt= zero(FT), loc::Matrix{FT}=reshape(FT[],0,0), label=0, quantity=:nothing) where {FT}
-	sdim = size(self.thermal_conductivity, 2)
+function update!(self::MatHeatDiff,
+    heatflux::Vector{FT},
+    output::Vector{FT},
+    gradT::Vector{FT},
+    t = zero(FT),
+    dt = zero(FT),
+    loc::Matrix{FT} = reshape(FT[], 0, 0),
+    label = 0,
+    quantity = :nothing) where {FT}
+    sdim = size(self.thermal_conductivity, 2)
     @assert length(heatflux) == sdim
-    mulCAB!(heatflux, self.thermal_conductivity, -gradT);
+    mulCAB!(heatflux, self.thermal_conductivity, -gradT)
     if quantity == :nothing
         #Nothing to be copied to the output array
     elseif quantity == :heatflux
         (length(output) >= sdim) || (output = zeros(sdim)) # make sure we can store it
-        copyto!(output, heatflux);
+        copyto!(output, heatflux)
     end
     return output
 end
