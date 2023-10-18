@@ -1,6 +1,7 @@
 module Poisson_examples
 using FinEtools
-using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
+using FinEtools.FTypesModule: FDataDict
+using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
@@ -14,30 +15,33 @@ function Poisson_FE_example()
     and uniform heat generation rate inside.  Mesh of regular linear TRIANGLES,
     in a grid of 1000 x 1000 edges (2M triangles, 1M degrees of freedom).
     Version: 10/11/2019
-    """
-    )
+    """)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-    Q = -6.0; # internal heat generation rate
-    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:2, j in 1:2] # conductivity matrix
+    Q = -6.0 # internal heat generation rate
+    tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
-    N = 1000;# number of subdivisions along the sides of the square domain
+    N = 1000# number of subdivisions along the sides of the square domain
 
     println("Mesh generation")
-    @time fens,fes =T3block(A, A, N, N)
+    @time fens, fes = T3block(A, A, N, N)
 
     geom = NodalField(fens.xyz)
-    Temp = NodalField(zeros(size(fens.xyz,1),1))
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     println("Searching nodes  for BC")
-    l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
+    l1 = selectnode(fens; box = [0.0 0.0 0.0 A], inflate = 1.0 / N / 100.0)
+    l2 = selectnode(fens; box = [A A 0.0 A], inflate = 1.0 / N / 100.0)
+    l3 = selectnode(fens; box = [0.0 A 0.0 0.0], inflate = 1.0 / N / 100.0)
+    l4 = selectnode(fens; box = [0.0 A A A], inflate = 1.0 / N / 100.0)
     List = vcat(l1, l2, l3, l4)
-    setebc!(Temp, List, true, 1, [tempf(geom.values[i,1], geom.values[i,2]) for i in List])
+    setebc!(Temp,
+        List,
+        true,
+        1,
+        [tempf(geom.values[i, 1], geom.values[i, 2]) for i in List])
     @time applyebc!(Temp)
     @time numberdofs!(Temp)
     @show count(fes), count(fens)
@@ -48,26 +52,25 @@ function Poisson_FE_example()
 
     femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
 
-
     println("Conductivity")
     @time K = conductivity(femm, geom, Temp)
     println("Internal heat generation")
-    # function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    # function getsource!(forceout, XYZ, tangents, fe_label)
     #   forceout[1] = Q; #heat source
     # end
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q]);
-    @time F = distribloads(FEMMBase(IntegDomain(fes, TriRule(1))), geom, Temp, fi, 3);
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
+    @time F = distribloads(FEMMBase(IntegDomain(fes, TriRule(1))), geom, Temp, fi, 3)
 
     println("Solution")
-    @time solve!(Temp, K, F)
+    @time solve_blocked!(Temp, K, F)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
 
-    Error= 0.0
-    for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
+    Error = 0.0
+    for k in 1:size(fens.xyz, 1)
+        Error = Error + abs.(Temp.values[k, 1] - tempf(fens.xyz[k, :]...))
     end
     println("Error =$Error")
 
@@ -78,12 +81,12 @@ function Poisson_FE_example()
 end
 
 function Poisson_FE_example_algo()
-    A= 1.0
-    thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-    magn = -6.0; #heat source
-    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    A = 1.0
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:2, j in 1:2] # conductivity matrix
+    magn = -6.0 #heat source
+    tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
     tempfa(x) = tempf(x...)
-    N=20;
+    N = 20
 
     println("""
     Heat conduction example described by Amuthan A. Ramabathiran
@@ -92,48 +95,43 @@ function Poisson_FE_example_algo()
     and uniform heat generation rate inside.  Mesh of regular TRIANGLES,
     in a grid of $N x $N edges.
     This version uses the FinEtools algorithm module.
-    """
-    )
+    """)
     t0 = time()
 
-    fens,fes = T3block(A, A, N, N)
-
+    fens, fes = T3block(A, A, N, N)
 
     # Define boundary conditions
-    l1  = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    l2  = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    l3  = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    l4  = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
+    l1 = selectnode(fens; box = [0.0 0.0 0.0 A], inflate = 1.0 / N / 100.0)
+    l2 = selectnode(fens; box = [A A 0.0 A], inflate = 1.0 / N / 100.0)
+    l3 = selectnode(fens; box = [0.0 A 0.0 0.0], inflate = 1.0 / N / 100.0)
+    l4 = selectnode(fens; box = [0.0 A A A], inflate = 1.0 / N / 100.0)
 
-    essential1 = FDataDict("node_list"=>vcat(l1, l2, l3, l4),
-    "temperature"=>tempfa);
+    essential1 = FDataDict("node_list" => vcat(l1, l2, l3, l4),
+        "temperature" => tempfa)
     material = MatHeatDiff(thermal_conductivity)
     femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
-    region1 = FDataDict("femm"=>femm, "Q"=>magn)
+    region1 = FDataDict("femm" => femm, "Q" => magn)
     # Make model data
-    modeldata= FDataDict("fens"=> fens,
-    "regions"=>[region1],
-    "essential_bcs"=>[essential1]);
-
+    modeldata = FDataDict("fens" => fens,
+        "regions" => [region1],
+        "essential_bcs" => [essential1])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
 
-    println("Total time elapsed = ",time() - t0,"s")
+    println("Total time elapsed = ", time() - t0, "s")
 
-    geom=modeldata["geom"]
-    Temp=modeldata["temp"]
-    femm=modeldata["regions"][1]["femm"]
+    geom = modeldata["geom"]
+    Temp = modeldata["temp"]
+    femm = modeldata["regions"][1]["femm"]
 
-    function errfh(loc,val)
+    function errfh(loc, val)
         exact = tempf(loc...)
-        return ((exact[1]-val[1])*exact)
+        return ((exact[1] - val[1]) * exact)
     end
-    E = integratefieldfunction(femm, geom, Temp, errfh; initial=0.0, m=3)
+    E = integratefieldfunction(femm, geom, Temp, errfh; initial = 0.0, m = 3)
     println("Error=$E")
-
 end # Poisson_FE_example_algo
-
 
 function Poisson_FE_example_csys_1()
     println("""
@@ -144,37 +142,36 @@ function Poisson_FE_example_csys_1()
     in a grid of 1000 x 1000 edges (2M triangles, 1M degrees of freedom).
     The material response is defined in a local coordinate system.
     Version: 10/11/2019
-    """
-    )
+    """)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-    Q = -6.0; # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
-        forceout[1] = Q; #heat source
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:2, j in 1:2] # conductivity matrix
+    Q = -6.0 # internal heat generation rate
+    function getsource!(forceout, XYZ, tangents, fe_label)
+        forceout[1] = Q #heat source
     end
-    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
-    N = 1000;# number of subdivisions along the sides of the square domain
-    Rm=[-0.9917568452513019 -0.12813414805267656
-    -0.12813414805267656 0.9917568452513019]
-    Rm=[-0.8020689950104449 -0.5972313850116512
-    -0.5972313850116512 0.8020689950104447]
+    N = 1000# number of subdivisions along the sides of the square domain
+    Rm = [-0.9917568452513019 -0.12813414805267656
+        -0.12813414805267656 0.9917568452513019]
+    Rm = [-0.8020689950104449 -0.5972313850116512
+        -0.5972313850116512 0.8020689950104447]
 
     println("Mesh generation")
-    @time fens,fes =T3block(A, A, N, N)
+    @time fens, fes = T3block(A, A, N, N)
 
     geom = NodalField(fens.xyz)
-    Temp = NodalField(zeros(size(fens.xyz,1),1))
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     println("Searching nodes  for BC")
-    @time l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    @time l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    @time l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    @time l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
+    @time l1 = selectnode(fens; box = [0.0 0.0 0.0 A], inflate = 1.0 / N / 100.0)
+    @time l2 = selectnode(fens; box = [A A 0.0 A], inflate = 1.0 / N / 100.0)
+    @time l3 = selectnode(fens; box = [0.0 A 0.0 0.0], inflate = 1.0 / N / 100.0)
+    @time l4 = selectnode(fens; box = [0.0 A A A], inflate = 1.0 / N / 100.0)
     List = vcat(l1, l2, l3, l4)
-    @time setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    @time setebc!(Temp, List, true, 1, tempf(geom.values[List, :])[:])
     @time applyebc!(Temp)
     @time numberdofs!(Temp)
 
@@ -187,29 +184,26 @@ function Poisson_FE_example_csys_1()
     println("Conductivity")
     @time K = conductivity(femm, geom, Temp)
     println("Internal heat generation")
-    fi = ForceIntensity(FFlt[Q]);
-    @time F = distribloads(femm, geom, Temp, fi, 3);
+    fi = ForceIntensity(Float64[Q])
+    @time F = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution")
-    @time solve!(Temp, K, F)
+    @time solve_blocked!(Temp, K, F)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
 
-    Error= 0.0
-    for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
+    Error = 0.0
+    for k in 1:size(fens.xyz, 1)
+        Error = Error + abs.(Temp.values[k, 1] - tempf(fens.xyz[k, :]...))
     end
     println("Error =$Error")
-
 
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")
 
     true
-
 end # Poisson_FE_example_csys_1
-
 
 function Poisson_FE_Q4_example()
     println("""
@@ -220,34 +214,32 @@ function Poisson_FE_Q4_example()
     and uniform heat generation rate inside.  Mesh of regular four-node QUADRILATERALS,
     in a grid of 1000 x 1000 edges (1M quads, 1M degrees of freedom).
     Version: 10/11/2019
-    """
-    )
+    """)
     t0 = time()
 
     A = 1.0
-    thermal_conductivity =  [i==j ? one(FFlt) : zero(FFlt) for i=1:2, j=1:2]; # conductivity matrix
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, feid::FInt, qpid::FInt)
-        forceout[1] = -6.0; #heat source
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:2, j in 1:2] # conductivity matrix
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
+        forceout[1] = -6.0 #heat source
         return forceout
     end
-    tempf(x, y) =(1.0 + x^2 + 2.0 * y^2);#the exact distribution of temperature
+    tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
-    N = 1000;
+    N = 1000
 
     println("Mesh generation")
-    @time fens,fes = Q4block(A, A, N, N)
+    @time fens, fes = Q4block(A, A, N, N)
 
     geom = NodalField(fens.xyz)
-    Temp = NodalField(zeros(size(fens.xyz,1),1))
-
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     println("Searching nodes  for BC")
-    l1 = selectnode(fens; box=[0. 0. 0. A], inflate = 1.0/N/100.0)
-    l2 = selectnode(fens; box=[A A 0. A], inflate = 1.0/N/100.0)
-    l3 = selectnode(fens; box=[0. A 0. 0.], inflate = 1.0/N/100.0)
-    l4 = selectnode(fens; box=[0. A A A], inflate = 1.0/N/100.0)
-    List = vcat(l1, l2, l3, l4);
-    setebc!(Temp, List, true, 1, tempf(geom.values[List,:])[:])
+    l1 = selectnode(fens; box = [0.0 0.0 0.0 A], inflate = 1.0 / N / 100.0)
+    l2 = selectnode(fens; box = [A A 0.0 A], inflate = 1.0 / N / 100.0)
+    l3 = selectnode(fens; box = [0.0 A 0.0 0.0], inflate = 1.0 / N / 100.0)
+    l4 = selectnode(fens; box = [0.0 A A A], inflate = 1.0 / N / 100.0)
+    List = vcat(l1, l2, l3, l4)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List, :])[:])
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -258,16 +250,15 @@ function Poisson_FE_Q4_example()
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 2)), m)
 
     println("Conductivity")
-    @time K=conductivity(femm, geom, Temp)
+    @time K = conductivity(femm, geom, Temp)
     #Profile.print()
 
     println("Internal heat generation")
-    fi = ForceIntensity(FFlt, 1, getsource!);
-    @time F = distribloads(femm, geom, Temp, fi, 3);
+    fi = ForceIntensity(Float64, 1, getsource!)
+    @time F = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution")
-    @time solve!(Temp, K, F)
-
+    @time solve_blocked!(Temp, K, F)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
@@ -277,12 +268,11 @@ function Poisson_FE_Q4_example()
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.Q4; scalars=Temp.values, scalars_name ="Temperature")
 
-    Error= 0.0
-    for k=1:size(fens.xyz,1)
-        Error = Error + abs.(Temp.values[k,1] - tempf(fens.xyz[k,:]...))
+    Error = 0.0
+    for k in 1:size(fens.xyz, 1)
+        Error = Error + abs.(Temp.values[k, 1] - tempf(fens.xyz[k, :]...))
     end
     println("Error =$Error")
-
 
     true
 end # Poisson_FE_Q4_example
