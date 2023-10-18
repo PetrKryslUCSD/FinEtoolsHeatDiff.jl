@@ -28,18 +28,18 @@ using FinEtools.DataCacheModule: DataCache
 
 Type for heat diffusion finite element modeling machine.
 """
-mutable struct FEMMHeatDiff{ID<:IntegDomain, M<:MatHeatDiff} <: AbstractFEMM
+mutable struct FEMMHeatDiff{ID<:IntegDomain, CS<:CSys, M<:MatHeatDiff} <: AbstractFEMM
     integdomain::ID # geometry data
-    mcsys::CSys # updater of the material orientation matrix
+    mcsys::CS # updater of the material orientation matrix
     material::M # material object
 end
 
 """
-    FEMMHeatDiff(integdomain::IntegDomain{S, F}, material::M) where {S<:AbstractFESet, F<:Function, M<:MatHeatDiff}
+    FEMMHeatDiff(integdomain::ID, material::M) where {ID<:IntegDomain, M<:MatHeatDiff}
 
 Construct with the default orientation matrix (identity).
 """
-function FEMMHeatDiff(integdomain::IntegDomain{S, F}, material::M) where {S<:AbstractFESet, F<:Function, M<:MatHeatDiff}
+function FEMMHeatDiff(integdomain::ID, material::M) where {ID<:IntegDomain, M<:MatHeatDiff}
     return FEMMHeatDiff(integdomain, CSys(manifdim(integdomain.fes)), material)
 end
 
