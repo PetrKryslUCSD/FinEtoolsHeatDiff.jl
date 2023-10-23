@@ -1,43 +1,46 @@
 module T129b_l2_examples
 using FinEtools
-using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
+using FinEtools.FTypesModule: FDataDict
+using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using LinearAlgebra: cholesky
 using PlotlyLight
 
 function T129b_l2_uq()
-    L = 6.0;
-    kappa = reshape([4.0], 1, 1);
-    Q  = 0.1;
-    n = 7; # number of elements
+    L = 6.0
+    kappa = reshape([4.0], 1, 1)
+    Q = 0.1
+    n = 7 # number of elements
     crosssection = 1.0
 
-    fens,fes = L2block(L, n)
+    fens, fes = L2block(L, n)
 
     # Define boundary conditions
-    l1  = selectnode(fens; box=[0. 0.], inflate = L/n/100.0)
-    l2  = selectnode(fens; box=[L L], inflate = L/n/100.0)
+    l1 = selectnode(fens; box = [0.0 0.0], inflate = L / n / 100.0)
+    l2 = selectnode(fens; box = [L L], inflate = L / n / 100.0)
 
-    essential1 = FDataDict("node_list"=>vcat(l1, l2), "temperature"=> 0.0);
+    essential1 = FDataDict("node_list" => vcat(l1, l2), "temperature" => 0.0)
     material = MatHeatDiff(kappa)
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(1, 2), crosssection), material)
-    region1 = FDataDict("femm"=>femm, "Q"=>Q)
+    region1 = FDataDict("femm" => femm, "Q" => Q)
     # Make model data
-    modeldata= FDataDict("fens"=> fens,    "regions"=>[region1],    "essential_bcs"=>[essential1]);
+    modeldata = FDataDict("fens" => fens,
+        "regions" => [region1],
+        "essential_bcs" => [essential1])
 
     geom = NodalField(fens.xyz)
-    Temp = NodalField(zeros(size(fens.xyz,1),1))
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
     setebc!(Temp, vcat(l1, l2), true, 1, 0.0)
     applyebc!(Temp)
     numberdofs!(Temp)
 
     K = conductivity(femm, geom, Temp)
 
-    fi = ForceIntensity(FFlt[Q]);
-    F = distribloads(femm, geom, Temp, fi, 3);
+    fi = ForceIntensity(Float64[Q])
+    F = distribloads(femm, geom, Temp, fi, 3)
 
-    solve!(Temp, K, F)
+    solve_blocked!(Temp, K, F)
 
     println("maximum(U)-0.1102 = $(maximum(Temp.values)-0.1102)")
 
@@ -72,44 +75,44 @@ function T129b_l2_uq()
     nothing
 end # T129b_l2_uq
 
-
 function T129b_l2_uq_algo()
-    L = 6.0;
-    kappa = reshape([4.0], 1, 1);
-    Q  = 0.1;
-    n = 7; # number of elements
+    L = 6.0
+    kappa = reshape([4.0], 1, 1)
+    Q = 0.1
+    n = 7 # number of elements
     crosssection = 1.0
 
-    fens,fes = L2block(L, n)
+    fens, fes = L2block(L, n)
 
     # Define boundary conditions
-    l1  = selectnode(fens; box=[0. 0.], inflate = L/n/100.0)
-    l2  = selectnode(fens; box=[L L], inflate = L/n/100.0)
+    l1 = selectnode(fens; box = [0.0 0.0], inflate = L / n / 100.0)
+    l2 = selectnode(fens; box = [L L], inflate = L / n / 100.0)
 
-    essential1 = FDataDict("node_list"=>vcat(l1, l2), "temperature"=> 0.0);
+    essential1 = FDataDict("node_list" => vcat(l1, l2), "temperature" => 0.0)
     material = MatHeatDiff(kappa)
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(1, 2), crosssection), material)
-    region1 = FDataDict("femm"=>femm, "Q"=>Q)
+    region1 = FDataDict("femm" => femm, "Q" => Q)
     # Make model data
-    modeldata= FDataDict("fens"=> fens,    "regions"=>[region1],    "essential_bcs"=>[essential1]);
-
+    modeldata = FDataDict("fens" => fens,
+        "regions" => [region1],
+        "essential_bcs" => [essential1])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
 
-    geom=modeldata["geom"]
-    Temp=modeldata["temp"]
-    femm=modeldata["regions"][1]["femm"]
+    geom = modeldata["geom"]
+    Temp = modeldata["temp"]
+    femm = modeldata["regions"][1]["femm"]
 
     # Evaluate error
-    function errfh(loc,val)
+    function errfh(loc, val)
         x = loc[1]
-        exact = (kappa[1,1]/Q/L^2)*Q/(2*kappa[1,1])*x*(L-x)
-        return ((exact-val[1])*exact)[1]
+        exact = (kappa[1, 1] / Q / L^2) * Q / (2 * kappa[1, 1]) * x * (L - x)
+        return ((exact - val[1]) * exact)[1]
     end
 
     femm.integdomain.integration_rule = GaussRule(1, 4)
-    E = integratefieldfunction(femm, geom, Temp, errfh; initial=0.0, m=3)
+    E = integratefieldfunction(femm, geom, Temp, errfh; initial = 0.0, m = 3)
     println("Error=$E")
 
     plt = PlotlyLight.Plot()

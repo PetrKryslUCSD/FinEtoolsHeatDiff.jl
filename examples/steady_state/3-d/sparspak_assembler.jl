@@ -1,9 +1,10 @@
 using SparseArrays
-import FinEtools.AssemblyModule: AbstractSysmatAssembler, startassembly!, assemble!, makematrix!
+import FinEtools.AssemblyModule: AbstractSysmatAssembler,
+    startassembly!, assemble!, makematrix!
 using Sparspak
 using Sparspak.SpkProblem: Problem, inaij!
 using Sparspak.SpkSparseSolver: SparseSolver, inmatrix!, findorder!, symbolicfactor!
-using Sparspak.SparseSolver: SparseSolver, solve!
+using Sparspak.SparseSolver: SparseSolver, solve_blocked!
 using MKL
 
 """
@@ -80,7 +81,7 @@ At this point all the buffers of the assembler have been cleared, and
 `makematrix!(a) ` is no longer possible.
 
 """
-function SysmatAssemblerSparspak(z= zero(FFlt), nomatrixresult = false)
+function SysmatAssemblerSparspak(z = zero(FFlt), nomatrixresult = false)
     return SysmatAssemblerSparspak(Problem(0, 0, 2500, z), 0, 0, nomatrixresult)
 end
 
@@ -118,24 +119,24 @@ dimensions on input. Otherwise, the buffers are left completely untouched.
     After the assembly, only the `(self.buffer_pointer - 1)` entries
     are meaningful numbers. Beware!
 """
-function startassembly!(
-    self::SysmatAssemblerSparspak,
+function startassembly!(self::SysmatAssemblerSparspak,
     elem_mat_nrows,
     elem_mat_ncols,
     elem_mat_nmatrices,
     ndofs_row,
     ndofs_col;
-    force_init = false
-)
+    force_init = false)
     # Only resize the buffers if the pointer is less than 1
     if self.ndofs_col < 1 || self.ndofs_row < 1
         self.ndofs_row = ndofs_row
         self.ndofs_col = ndofs_col
-        self.problem = Problem(self.ndofs_row, self.ndofs_col, elem_mat_nrows * self.ndofs_col, zero(eltype(self.problem.rhs)))
+        self.problem = Problem(self.ndofs_row,
+            self.ndofs_col,
+            elem_mat_nrows * self.ndofs_col,
+            zero(eltype(self.problem.rhs)))
     end
     # Leave the buffers uninitialized, unless the user requests otherwise
     if force_init
-
     end
 
     return self
@@ -151,12 +152,10 @@ end
 
 Assemble a rectangular matrix.
 """
-function assemble!(
-    self::SysmatAssemblerSparspak,
+function assemble!(self::SysmatAssemblerSparspak,
     mat::MT,
     dofnums_row::IT,
-    dofnums_col::IT,
-) where {MT, IT}
+    dofnums_col::IT) where {MT, IT}
     # Assembly of a rectangular matrix.
     # The method assembles a rectangular matrix using the two vectors of
     # equation numbers for the rows and columns.

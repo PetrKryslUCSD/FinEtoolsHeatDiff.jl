@@ -38,32 +38,31 @@ function T4NAFEMS_T3_algo()
     Two-dimensional heat transfer with convection: convergence study.
     Solution with linear triangles.
     Version: 05/29/2017
-    """
-    )
+    """)
 
-    kappa = [52. 0; 0 52.]*phun("W/(M*K)"); # conductivity matrix
-    h = 750*phun("W/(M^2*K)");# surface heat transfer coefficient
-    Width = 0.6*phun("M");# Geometrical dimensions
-    Height = 1.0*phun("M");
-    HeightA = 0.2*phun("M");
-    Thickness = 0.1*phun("M");
-    tolerance  = Width/1000;
+    kappa = [52.0 0; 0 52.0] * phun("W/(M*K)") # conductivity matrix
+    h = 750 * phun("W/(M^2*K)")# surface heat transfer coefficient
+    Width = 0.6 * phun("M")# Geometrical dimensions
+    Height = 1.0 * phun("M")
+    HeightA = 0.2 * phun("M")
+    Thickness = 0.1 * phun("M")
+    tolerance = Width / 1000
 
     m = MatHeatDiff(kappa)
 
     modeldata = nothing
     resultsTempA = FFlt[]
-    for nref = 1:5
+    for nref in 1:5
         t0 = time()
 
         # The mesh is created from two triangles to begin with
-        fens,fes = T3blockx([0.0, Width], [0.0, HeightA])
-        fens2,fes2 = T3blockx([0.0, Width], [HeightA, Height])
-        fens,newfes1,fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
-        fes = cat(newfes1,fes2)
+        fens, fes = T3blockx([0.0, Width], [0.0, HeightA])
+        fens2, fes2 = T3blockx([0.0, Width], [HeightA, Height])
+        fens, newfes1, fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
+        fes = cat(newfes1, fes2)
         # Refine the mesh desired number of times
-        for ref = 1:nref
-            fens,fes = T3refine(fens,fes);
+        for ref in 1:nref
+            fens, fes = T3refine(fens, fes)
         end
         bfes = meshboundary(fes)
 
@@ -73,36 +72,36 @@ function T4NAFEMS_T3_algo()
         # The prescribed temperature is applied along edge 1 (the bottom
         # edge in Figure 1)..
 
-        l1 = selectnode(fens; box=[0. Width 0. 0.], inflate=tolerance)
-        essential1 = FDataDict("node_list"=>l1, "temperature"=> 100.);
+        l1 = selectnode(fens; box = [0.0 Width 0.0 0.0], inflate = tolerance)
+        essential1 = FDataDict("node_list" => l1, "temperature" => 100.0)
 
         ##
         # The convection boundary condition is applied along the edges
         # 2,3,4. The elements along the boundary are quadratic line
         # elements L3. The order-four Gauss quadrature is sufficiently
         # accurate.
-        l2 = selectelem(fens, bfes; box=[Width Width  0.0 Height], inflate =tolerance)
-        l3 = selectelem(fens, bfes; box=[0.0 Width Height Height], inflate =tolerance)
-        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes,vcat(l2,l3)),
-        GaussRule(1, 3), Thickness), h)
-        convection1 = FDataDict("femm"=>cfemm, "ambient_temperature"=>0.);
+        l2 = selectelem(fens, bfes; box = [Width Width 0.0 Height], inflate = tolerance)
+        l3 = selectelem(fens, bfes; box = [0.0 Width Height Height], inflate = tolerance)
+        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes, vcat(l2, l3)),
+                GaussRule(1, 3), Thickness), h)
+        convection1 = FDataDict("femm" => cfemm, "ambient_temperature" => 0.0)
 
         # The interior
         femm = FEMMHeatDiff(IntegDomain(fes, TriRule(3), Thickness), m)
-        region1 = FDataDict("femm"=>femm)
+        region1 = FDataDict("femm" => femm)
 
         # Make the model data
-        modeldata = FDataDict("fens"=> fens,
-        "regions"=>[region1],
-        "essential_bcs"=>[essential1],
-        "convection_bcs"=>[convection1]);
+        modeldata = FDataDict("fens" => fens,
+            "regions" => [region1],
+            "essential_bcs" => [essential1],
+            "convection_bcs" => [convection1])
 
         # Call the solver
         modeldata = AlgoHeatDiffModule.steadystate(modeldata)
 
-        println("Total time elapsed = ",time() - t0,"s")
+        println("Total time elapsed = ", time() - t0, "s")
 
-        l4 = selectnode(fens; box=[Width Width HeightA HeightA], inflate =tolerance)
+        l4 = selectnode(fens; box = [Width Width HeightA HeightA], inflate = tolerance)
 
         geom = modeldata["geom"]
         Temp = modeldata["temp"]
@@ -111,8 +110,7 @@ function T4NAFEMS_T3_algo()
         # Collect the temperature  at the point A  [coordinates
         # (Width,HeightA)].
         println("$(Temp.values[l4][1])")
-        push!(resultsTempA, Temp.values[l4][1]);
-
+        push!(resultsTempA, Temp.values[l4][1])
     end
 
     ##
@@ -123,9 +121,13 @@ function T4NAFEMS_T3_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),  [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T3;
-    scalars=[("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T3--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T3)
+    vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values Temp.values / 100], FinEtools.MeshExportModule.VTK.T3;
+        scalars = [("Temperature", Temp.values)])
+    vtkexportmesh("T4NAFEMS--T3--base.vtk",
+        connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values 0.0 * Temp.values / 100],
+        FinEtools.MeshExportModule.VTK.T3)
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the
@@ -155,7 +157,6 @@ function T4NAFEMS_T3_algo()
     #     ylabel('log(|approximate temperature error|)')
     #     set_graphics_defaults
 
-
     ## Discussion
     #
     ##
@@ -169,7 +170,6 @@ function T4NAFEMS_T3_algo()
     # efficient to use graded meshes. The tutorial pub_T4NAFEMS_conv_graded
     # addresses use of graded meshes  in convergence studies.
 end # T4NAFEMS_T3_algo
-
 
 function T4NAFEMS_T6_algo()
     ## Two-dimensional heat transfer with convection: convergence study
@@ -205,34 +205,34 @@ function T4NAFEMS_T6_algo()
     Two-dimensional heat transfer with convection: convergence study.
     Solution with quadratic triangles.
     Version: 05/29/2017
-    """
-    )
+    """)
 
-    kappa = [52. 0; 0 52.]*phun("W/(M*K)"); # conductivity matrix
-    h = 750*phun("W/(M^2*K)");# surface heat transfer coefficient
-    Width = 0.6*phun("M");# Geometrical dimensions
-    Height = 1.0*phun("M");
-    HeightA = 0.2*phun("M");
-    Thickness = 0.1*phun("M");
-    tolerance  = Width/1000;
+    kappa = [52.0 0; 0 52.0] * phun("W/(M*K)") # conductivity matrix
+    h = 750 * phun("W/(M^2*K)")# surface heat transfer coefficient
+    Width = 0.6 * phun("M")# Geometrical dimensions
+    Height = 1.0 * phun("M")
+    HeightA = 0.2 * phun("M")
+    Thickness = 0.1 * phun("M")
+    tolerance = Width / 1000
 
     m = MatHeatDiff(kappa)
 
     modeldata = nothing
-    resultsTempA = FFlt[]; params = FFlt[];
-    for nref = 3:7
+    resultsTempA = FFlt[]
+    params = FFlt[]
+    for nref in 3:7
         t0 = time()
 
         # The mesh is created from two triangles to begin with
-        fens,fes = T3blockx([0.0, Width], [0.0, HeightA])
-        fens2,fes2 = T3blockx([0.0, Width], [HeightA, Height])
-        fens,newfes1,fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
-        fes = cat(newfes1,fes2)
+        fens, fes = T3blockx([0.0, Width], [0.0, HeightA])
+        fens2, fes2 = T3blockx([0.0, Width], [HeightA, Height])
+        fens, newfes1, fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
+        fes = cat(newfes1, fes2)
         # Refine the mesh desired number of times
-        for ref = 1:nref
-            fens,fes = T3refine(fens,fes);
+        for ref in 1:nref
+            fens, fes = T3refine(fens, fes)
         end
-        fens, fes = T3toT6(fens,fes);
+        fens, fes = T3toT6(fens, fes)
         bfes = meshboundary(fes)
 
         # Define boundary conditions
@@ -241,36 +241,36 @@ function T4NAFEMS_T6_algo()
         # The prescribed temperature is applied along edge 1 (the bottom
         # edge in Figure 1)..
 
-        l1 = selectnode(fens; box=[0. Width 0. 0.], inflate=tolerance)
-        essential1 = FDataDict("node_list"=>l1, "temperature"=> 100.);
+        l1 = selectnode(fens; box = [0.0 Width 0.0 0.0], inflate = tolerance)
+        essential1 = FDataDict("node_list" => l1, "temperature" => 100.0)
 
         ##
         # The convection boundary condition is applied along the edges
         # 2,3,4. The elements along the boundary are quadratic line
         # elements L3. The order-four Gauss quadrature is sufficiently
         # accurate.
-        l2 = selectelem(fens, bfes; box=[Width Width  0.0 Height], inflate =tolerance)
-        l3 = selectelem(fens, bfes; box=[0.0 Width Height Height], inflate =tolerance)
-        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes,vcat(l2,l3)),
-        GaussRule(1, 3), Thickness), h)
-        convection1 = FDataDict("femm"=>cfemm, "ambient_temperature"=>0.);
+        l2 = selectelem(fens, bfes; box = [Width Width 0.0 Height], inflate = tolerance)
+        l3 = selectelem(fens, bfes; box = [0.0 Width Height Height], inflate = tolerance)
+        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes, vcat(l2, l3)),
+                GaussRule(1, 3), Thickness), h)
+        convection1 = FDataDict("femm" => cfemm, "ambient_temperature" => 0.0)
 
         # The interior
         femm = FEMMHeatDiff(IntegDomain(fes, TriRule(3), Thickness), m)
-        region1 = FDataDict("femm"=>femm)
+        region1 = FDataDict("femm" => femm)
 
         # Make the model data
-        modeldata = FDataDict("fens"=> fens,
-        "regions"=>[region1],
-        "essential_bcs"=>[essential1],
-        "convection_bcs"=>[convection1]);
+        modeldata = FDataDict("fens" => fens,
+            "regions" => [region1],
+            "essential_bcs" => [essential1],
+            "convection_bcs" => [convection1])
 
         # Call the solver
         modeldata = AlgoHeatDiffModule.steadystate(modeldata)
 
-        println("Total time elapsed = ",time() - t0,"s")
+        println("Total time elapsed = ", time() - t0, "s")
 
-        l4 = selectnode(fens; box=[Width Width HeightA HeightA], inflate =tolerance)
+        l4 = selectnode(fens; box = [Width Width HeightA HeightA], inflate = tolerance)
 
         geom = modeldata["geom"]
         Temp = modeldata["temp"]
@@ -278,9 +278,8 @@ function T4NAFEMS_T6_algo()
         ##
         # Collect the temperature  at the point A  [coordinates
         # (Width,HeightA)].
-        push!(resultsTempA, Temp.values[l4][1]);
-        push!(params, 1.0/2^nref);
-
+        push!(resultsTempA, Temp.values[l4][1])
+        push!(params, 1.0 / 2^nref)
     end
 
     ##
@@ -288,7 +287,8 @@ function T4NAFEMS_T6_algo()
     println("$( params  )")
     println("$( resultsTempA  )")
 
-    solnestim, beta, c, residual = richextrapol(resultsTempA[end-2:end], params[end-2:end])
+    solnestim, beta, c, residual = richextrapol(resultsTempA[(end - 2):end],
+        params[(end - 2):end])
     println("Solution estimate = $(solnestim)")
     println("Convergence rate estimate  = $(beta )")
 
@@ -296,9 +296,13 @@ function T4NAFEMS_T6_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values Temp.values/100], FinEtools.MeshExportModule.VTK.T6;
-    scalars=[("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T6--base.vtk", connasarray(regions[1]["femm"].integdomain.fes), [geom.values 0.0*Temp.values/100], FinEtools.MeshExportModule.VTK.T6)
+    vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values Temp.values / 100], FinEtools.MeshExportModule.VTK.T6;
+        scalars = [("Temperature", Temp.values)])
+    vtkexportmesh("T4NAFEMS--T6--base.vtk",
+        connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values 0.0 * Temp.values / 100],
+        FinEtools.MeshExportModule.VTK.T6)
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the
@@ -327,7 +331,6 @@ function T4NAFEMS_T6_algo()
     #     xlabel('log(mesh size)')
     #     ylabel('log(|approximate temperature error|)')
     #     set_graphics_defaults
-
 
     ## Discussion
     #

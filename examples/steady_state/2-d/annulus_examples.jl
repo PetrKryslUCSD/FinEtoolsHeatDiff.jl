@@ -1,6 +1,7 @@
 module annulus_examples
 using FinEtools
-using FinEtools.AlgoBaseModule: solve!, matrix_blocked, vector_blocked
+using FinEtools.FTypesModule: FDataDict
+using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 using LinearAlgebra: cholesky
@@ -13,60 +14,61 @@ function annulus_Q4_example()
 
     t0 = time()
 
-    kappa = 0.2*[1.0 0; 0 1.0]; # conductivity matrix
-    magn = 0.06;# heat flux along the boundary
-    rin =  1.0;#internal radius
-    rex =  2.0;#external radius
-    nr = 10; nc = 80;1
-    Angle = 2*pi;
-    thickness =  1.0;
-    tolerance = min(rin/nr,  rin/nc/2/pi)/10000;
+    kappa = 0.2 * [1.0 0; 0 1.0] # conductivity matrix
+    magn = 0.06# heat flux along the boundary
+    rin = 1.0#internal radius
+    rex = 2.0#external radius
+    nr = 10
+    nc = 80
+    1
+    Angle = 2 * pi
+    thickness = 1.0
+    tolerance = min(rin / nr, rin / nc / 2 / pi) / 10000
 
-
-    fens, fes  =  Q4annulus(rin, rex, nr, nc, Angle)
-    fens, fes  =  mergenodes(fens,  fes,  tolerance);
-    edge_fes  =  meshboundary(fes);
+    fens, fes = Q4annulus(rin, rex, nr, nc, Angle)
+    fens, fes = mergenodes(fens, fes, tolerance)
+    edge_fes = meshboundary(fes)
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
-
-    l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    l1 = selectnode(fens; box = [0.0 0.0 -rex -rex], inflate = tolerance)
+    setebc!(Temp, l1, 1, zero(Float64))
     applyebc!(Temp)
 
     numberdofs!(Temp)
 
-
     material = MatHeatDiff(kappa)
-    femm = FEMMHeatDiff(IntegDomain(fes,  GaussRule(2, 2)),  material)
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 2)), material)
 
-    @time K = conductivity(femm,  geom,  Temp)
+    @time K = conductivity(femm, geom, Temp)
 
-    l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
-    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[-magn]);#entering the domain
-    @time F1 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
+    l1 = selectelem(fens, edge_fes, box = [-1.1 * rex -0.9 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
+    fi = ForceIntensity(Float64[-magn])#entering the domain
+    @time F1 = (-1.0) * distribloads(el1femm, geom, Temp, fi, 2)
 
-    l1 = selectelem(fens, edge_fes, box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
-    el1femm =  FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[+magn]);#leaving the domain
-    @time F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
+    l1 = selectelem(fens, edge_fes, box = [0.9 * rex 1.1 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
+    fi = ForceIntensity(Float64[+magn])#leaving the domain
+    @time F2 = (-1.0) * distribloads(el1femm, geom, Temp, fi, 2)
 
-    @time solve!(Temp, K, F1+F2)
+    @time solve_blocked!(Temp, K, F1 + F2)
 
     println("Total time elapsed = ", time() - t0, "s")
 
-    File =  "annulus.vtk"
-    vtkexportmesh(File,  connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
+    File = "annulus.vtk"
+    vtkexportmesh(File,
+        connasarray(fes),
+        [geom.values Temp.values],
+        FinEtools.MeshExportModule.VTK.Q4;
+        scalars = [("Temperature", Temp.values)])
     @async run(`"paraview.exe" $File`)
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
     true
-
 end # annulus_Q4_example
-
 
 function annulus_Q4_example_algo()
     println("""
@@ -79,57 +81,60 @@ function annulus_Q4_example_algo()
 
     t0 = time()
 
-    kappa = 0.2*[1.0 0; 0 1.0]; # conductivity matrix
-    magn = 0.06;# heat flux along the boundary
-    rin =  1.0;#internal radius
+    kappa = 0.2 * [1.0 0; 0 1.0] # conductivity matrix
+    magn = 0.06# heat flux along the boundary
+    rin = 1.0#internal radius
 
-    rex =  2.0; #external radius
-    nr = 3; nc = 40;
-    Angle = 2*pi;
-    thickness =  1.0;
-    tolerance = min(rin/nr,  rin/nc/2/pi)/10000;
+    rex = 2.0 #external radius
+    nr = 3
+    nc = 40
+    Angle = 2 * pi
+    thickness = 1.0
+    tolerance = min(rin / nr, rin / nc / 2 / pi) / 10000
 
     fens, fes = Q4annulus(rin, rex, nr, nc, Angle)
-    fens, fes = mergenodes(fens,  fes,  tolerance);
-    edge_fes = meshboundary(fes);
+    fens, fes = mergenodes(fens, fes, tolerance)
+    edge_fes = meshboundary(fes)
 
     # At a single point apply an essential boundary condition (pin down the temperature)
-    l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    essential1 = FDataDict("node_list"=>l1, "temperature"=>0.0)
+    l1 = selectnode(fens; box = [0.0 0.0 -rex -rex], inflate = tolerance)
+    essential1 = FDataDict("node_list" => l1, "temperature" => 0.0)
 
     # The flux boundary condition is applied at two pieces of surface
     # Side 1
-    l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
-    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[-magn]);#entering the domain
-    flux1 = FDataDict("femm"=>el1femm, "normal_flux"=>-magn) # entering the domain
+    l1 = selectelem(fens, edge_fes, box = [-1.1 * rex -0.9 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
+    fi = ForceIntensity(Float64[-magn])#entering the domain
+    flux1 = FDataDict("femm" => el1femm, "normal_flux" => -magn) # entering the domain
     # Side 2
-    l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
-    el2femm = FEMMBase(IntegDomain(subset(edge_fes, l2),  GaussRule(1, 2)))
-    flux2 = FDataDict("femm"=>el2femm, "normal_flux"=>+magn) # leaving the domain
+    l2 = selectelem(fens, edge_fes, box = [0.9 * rex 1.1 * rex -0.5 * rex 0.5 * rex])
+    el2femm = FEMMBase(IntegDomain(subset(edge_fes, l2), GaussRule(1, 2)))
+    flux2 = FDataDict("femm" => el2femm, "normal_flux" => +magn) # leaving the domain
 
     material = MatHeatDiff(kappa)
-    femm = FEMMHeatDiff(IntegDomain(fes,  GaussRule(2, 2)),  material)
-    region1 = FDataDict("femm"=>femm)
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 2)), material)
+    region1 = FDataDict("femm" => femm)
 
     # Make model data
-    modeldata = FDataDict("fens"=>fens,
-    "regions"=>[region1], "essential_bcs"=>[essential1],
-    "flux_bcs"=>[flux1, flux2]);
+    modeldata = FDataDict("fens" => fens,
+        "regions" => [region1], "essential_bcs" => [essential1],
+        "flux_bcs" => [flux1, flux2])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
-    geom=modeldata["geom"]
-    Temp=modeldata["temp"]
+    geom = modeldata["geom"]
+    Temp = modeldata["temp"]
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
-    println("Total time elapsed = ",time() - t0,"s")
+    println("Total time elapsed = ", time() - t0, "s")
 
     # Postprocessing
-    vtkexportmesh("annulusmod.vtk", connasarray(fes), [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
-
+    vtkexportmesh("annulusmod.vtk",
+        connasarray(fes),
+        [geom.values Temp.values],
+        FinEtools.MeshExportModule.VTK.Q4;
+        scalars = [("Temperature", Temp.values)])
 end # annulus_Q4_example_algo
-
 
 function annulus_Q8_example()
     println("""
@@ -140,60 +145,60 @@ function annulus_Q8_example()
 
     t0 = time()
 
-    kappa = 0.2*[1.0 0; 0 1.0]; # conductivity matrix
-    magn = 0.06;# heat flux along the boundary
-    rin =  1.0;#internal radius
+    kappa = 0.2 * [1.0 0; 0 1.0] # conductivity matrix
+    magn = 0.06# heat flux along the boundary
+    rin = 1.0#internal radius
 
-    rex =  2.0; #external radius
-    nr = 5; nc = 40;
-    Angle = 2*pi;
-    thickness =  1.0;
-    tolerance = min(rin/nr,  rin/nc/2/pi)/10000;
+    rex = 2.0 #external radius
+    nr = 5
+    nc = 40
+    Angle = 2 * pi
+    thickness = 1.0
+    tolerance = min(rin / nr, rin / nc / 2 / pi) / 10000
 
-
-    fens, fes  =  Q8annulus(rin, rex, nr, nc, Angle)
-    fens, fes  =  mergenodes(fens,  fes,  tolerance);
-    edge_fes  =  meshboundary(fes);
+    fens, fes = Q8annulus(rin, rex, nr, nc, Angle)
+    fens, fes = mergenodes(fens, fes, tolerance)
+    edge_fes = meshboundary(fes)
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
-
-    l1  = selectnode(fens; box=[0.0 0.0 -rex -rex],  inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    l1 = selectnode(fens; box = [0.0 0.0 -rex -rex], inflate = tolerance)
+    setebc!(Temp, l1, 1, zero(Float64))
     applyebc!(Temp)
 
     numberdofs!(Temp)
 
-
     material = MatHeatDiff(kappa)
-    femm = FEMMHeatDiff(IntegDomain(fes,  GaussRule(2, 3)),  material)
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 3)), material)
 
-    @time K = conductivity(femm,  geom,  Temp)
+    @time K = conductivity(femm, geom, Temp)
 
-    l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
-    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[-magn]);#entering the domain
-    @time F1 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
+    l1 = selectelem(fens, edge_fes, box = [-1.1 * rex -0.9 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
+    fi = ForceIntensity(Float64[-magn])#entering the domain
+    @time F1 = (-1.0) * distribloads(el1femm, geom, Temp, fi, 2)
 
-    l1 = selectelem(fens, edge_fes, box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
-    el1femm =  FEMMBase(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[+magn]);#leaving the domain
-    @time F2 = (-1.0)* distribloads(el1femm,  geom,  Temp,  fi,  2);
+    l1 = selectelem(fens, edge_fes, box = [0.9 * rex 1.1 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
+    fi = ForceIntensity(Float64[+magn])#leaving the domain
+    @time F2 = (-1.0) * distribloads(el1femm, geom, Temp, fi, 2)
 
-    @time solve!(Temp, K, F1+F2)
+    @time solve_blocked!(Temp, K, F1 + F2)
 
     println("Total time elapsed = ", time() - t0, "s")
 
-    File =  "annulusq8.vtk"
-    vtkexportmesh(File, connasarray(fes),  [geom.values Temp.values], FinEtools.MeshExportModule.VTK.Q8; scalars=[("Temperature", Temp.values)])
+    File = "annulusq8.vtk"
+    vtkexportmesh(File,
+        connasarray(fes),
+        [geom.values Temp.values],
+        FinEtools.MeshExportModule.VTK.Q8;
+        scalars = [("Temperature", Temp.values)])
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
     true
-
 end # annulus_Q8_example
-
 
 function ebc_annulus_Q4_algo()
     println("""
@@ -206,51 +211,56 @@ function ebc_annulus_Q4_algo()
 
     t0 = time()
 
-    kappa = 0.2*[1.0 0; 0 1.0]; # conductivity matrix
+    kappa = 0.2 * [1.0 0; 0 1.0] # conductivity matrix
     te1 = -0.5
     te2 = 0.6
     hconv1, hconv2 = 1000.0, 1000.0
-    rin =  1.0;#internal radius
-    rex =  2.0; #external radius
-    nr = 7; nc = 90;
-    Angle = 2*pi;
-    thickness =  1.0;
-    tolerance = min(rin/nr,  rin/nc/2/pi)/10000;
+    rin = 1.0#internal radius
+    rex = 2.0 #external radius
+    nr = 7
+    nc = 90
+    Angle = 2 * pi
+    thickness = 1.0
+    tolerance = min(rin / nr, rin / nc / 2 / pi) / 10000
 
     fens, fes = Q4annulus(rin, rex, nr, nc, Angle)
-    fens, fes = mergenodes(fens,  fes,  tolerance);
-    edge_fes = meshboundary(fes);
+    fens, fes = mergenodes(fens, fes, tolerance)
+    edge_fes = meshboundary(fes)
 
     # The convection boundary condition is applied at two pieces of surface
     # Side 1
-    l1 = selectelem(fens, edge_fes, box=[-1.1*rex -0.9*rex -0.5*rex 0.5*rex]);
-    el1femm = FEMMHeatDiffSurf(IntegDomain(subset(edge_fes, l1),  GaussRule(1, 2)), hconv1)
-    cbc1 = FDataDict("femm"=>el1femm, "ambient_temperature"=>te1)
+    l1 = selectelem(fens, edge_fes, box = [-1.1 * rex -0.9 * rex -0.5 * rex 0.5 * rex])
+    el1femm = FEMMHeatDiffSurf(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)), hconv1)
+    cbc1 = FDataDict("femm" => el1femm, "ambient_temperature" => te1)
     # Side 2
-    l2=selectelem(fens,edge_fes,box=[0.9*rex 1.1*rex -0.5*rex 0.5*rex]);
-    el2femm = FEMMHeatDiffSurf(IntegDomain(subset(edge_fes, l2),  GaussRule(1, 2)), hconv2)
-    cbc2 = FDataDict("femm"=>el2femm, "ambient_temperature"=>te2)
+    l2 = selectelem(fens, edge_fes, box = [0.9 * rex 1.1 * rex -0.5 * rex 0.5 * rex])
+    el2femm = FEMMHeatDiffSurf(IntegDomain(subset(edge_fes, l2), GaussRule(1, 2)), hconv2)
+    cbc2 = FDataDict("femm" => el2femm, "ambient_temperature" => te2)
 
     material = MatHeatDiff(kappa)
-    femm = FEMMHeatDiff(IntegDomain(fes,  GaussRule(2, 2)),  material)
-    region1 = FDataDict("femm"=>femm)
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 2)), material)
+    region1 = FDataDict("femm" => femm)
 
     # Make model data
-    modeldata = FDataDict("fens"=>fens,
-    "regions"=>[region1],
-    "convection_bcs"=>[cbc1, cbc2]);
+    modeldata = FDataDict("fens" => fens,
+        "regions" => [region1],
+        "convection_bcs" => [cbc1, cbc2])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
-    geom=modeldata["geom"]
-    Temp=modeldata["temp"]
+    geom = modeldata["geom"]
+    Temp = modeldata["temp"]
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
-    println("Total time elapsed = ",time() - t0,"s")
+    println("Total time elapsed = ", time() - t0, "s")
 
     # Postprocessing
     File = "annulusmod.vtk"
-    vtkexportmesh(File, connasarray(fes), [geom.values Temp.values],  FinEtools.MeshExportModule.VTK.Q4; scalars=[("Temperature", Temp.values)])
+    vtkexportmesh(File,
+        connasarray(fes),
+        [geom.values Temp.values],
+        FinEtools.MeshExportModule.VTK.Q4;
+        scalars = [("Temperature", Temp.values)])
     # @async run(`"paraview.exe" $File`)
 
 end # ebc_annulus_Q4_algo

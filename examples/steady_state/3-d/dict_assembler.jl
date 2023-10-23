@@ -1,6 +1,6 @@
 using SparseArrays
-import FinEtools.AssemblyModule: AbstractSysmatAssembler, startassembly!, assemble!, makematrix!
-
+import FinEtools.AssemblyModule: AbstractSysmatAssembler,
+    startassembly!, assemble!, makematrix!
 
 """
     SysmatAssemblerSparseDict{IT, MBT, IBT} <: AbstractSysmatAssembler
@@ -76,7 +76,7 @@ At this point all the buffers of the assembler have been cleared, and
 `makematrix!(a) ` is no longer possible.
 
 """
-function SysmatAssemblerSparseDict(z= zero(FFlt), nomatrixresult = false)
+function SysmatAssemblerSparseDict(z = zero(FFlt), nomatrixresult = false)
     return SysmatAssemblerSparseDict(Dict{Int, typeof(z)}[], 0, 0, nomatrixresult)
 end
 
@@ -114,24 +114,21 @@ dimensions on input. Otherwise, the buffers are left completely untouched.
     After the assembly, only the `(self.buffer_pointer - 1)` entries
     are meaningful numbers. Beware!
 """
-function startassembly!(
-    self::SysmatAssemblerSparseDict,
+function startassembly!(self::SysmatAssemblerSparseDict,
     elem_mat_nrows,
     elem_mat_ncols,
     elem_mat_nmatrices,
     ndofs_row,
     ndofs_col;
-    force_init = false
-)
+    force_init = false)
     # Only resize the buffers if the pointer is less than 1
     if length(self.rows) < 1
         self.ndofs_row = ndofs_row
         self.ndofs_col = ndofs_col
-        self.rows = [eltype(self.rows)() for _ in 1:self.ndofs_col]
+        self.rows = [eltype(self.rows)() for _ in 1:(self.ndofs_col)]
     end
     # Leave the buffers uninitialized, unless the user requests otherwise
     if force_init
-
     end
 
     return self
@@ -147,12 +144,10 @@ end
 
 Assemble a rectangular matrix.
 """
-function assemble!(
-    self::SysmatAssemblerSparseDict,
+function assemble!(self::SysmatAssemblerSparseDict,
     mat::MT,
     dofnums_row::IT,
-    dofnums_col::IT,
-) where {MT, IT}
+    dofnums_col::IT) where {MT, IT}
     # Assembly of a rectangular matrix.
     # The method assembles a rectangular matrix using the two vectors of
     # equation numbers for the rows and columns.
@@ -192,14 +187,14 @@ function makematrix!(self::SysmatAssemblerSparseDict{IT, FT}) where {IT, FT}
     end
     # Otherwise converted the buffer into the COO format.
     ne = 0
-    for j in 1:self.ndofs_col
+    for j in 1:(self.ndofs_col)
         ne += length(self.rows[j])
     end
     I = fill(zero(IT), ne)
     J = fill(zero(IT), ne)
     V = fill(zero(FT), ne)
     p = 1
-    for j in 1:self.ndofs_col
+    for j in 1:(self.ndofs_col)
         n = length(self.rows[j])
         for (r, v) in pairs(self.rows[j])
             I[p] = r
