@@ -27,7 +27,7 @@ using FinEtools.DataCacheModule: DataCache
 
     Type for heat diffusion finite element modeling machine for boundary integrals.
 """
-mutable struct FEMMHeatDiffSurf{ID <: IntegDomain, FT<:Number} <: AbstractFEMM
+mutable struct FEMMHeatDiffSurf{ID <: IntegDomain, FT <: Number} <: AbstractFEMM
     integdomain::ID # geometry data
     surfacetransfercoeff::FT # material object
 end
