@@ -94,16 +94,16 @@ function steadystate(modeldata::FDataDict)
 
     # Apply the essential boundary conditions on the temperature field
     essential_bcs = get(modeldata, "essential_bcs", nothing)
-    if (essential_bcs != nothing)
-        for j in 1:length(essential_bcs)
+    if (essential_bcs !== nothing)
+        for j in eachindex(essential_bcs)
             ebc = essential_bcs[j]
             dcheck!(ebc, essential_bcs_recognized_keys)
             fenids = get(() -> error("Must get node list!"), ebc, "node_list")
             temperature = get(ebc, "temperature", nothing)
             T_fixed = zeros(FT, length(fenids)) # default is  zero temperature
-            if (temperature != nothing) # if it is nonzero,
+            if (temperature !== nothing) # if it is nonzero,
                 if (typeof(temperature) <: Function) # it could be a function
-                    for k in 1:length(fenids)
+                    for k in eachindex(fenids)
                         T_fixed[k] = temperature(geom.values[fenids[k], :])
                     end
                 else # or it could be a constant
@@ -124,7 +124,7 @@ function steadystate(modeldata::FDataDict)
     # Construct the system conductivity matrix
     K = spzeros(nalldofs(temp), nalldofs(temp)) # (all zeros, for the moment)
     regions = get(() -> error("Must get regions!"), modeldata, "regions")
-    for i in 1:length(regions)
+    for i in eachindex(regions)
         region = regions[i]
         dcheck!(region, regions_recognized_keys)
         femm = region["femm"]
@@ -141,9 +141,9 @@ function steadystate(modeldata::FDataDict)
 
     # Process the convection boundary condition
     convection_bcs = get(modeldata, "convection_bcs", nothing)
-    if (convection_bcs != nothing)
+    if (convection_bcs !== nothing)
         amb = deepcopy(temp) # create the ambient temperature field
-        for i in 1:length(convection_bcs)
+        for i in eachindex(convection_bcs)
             convbc = convection_bcs[i]
             dcheck!(convbc, convection_bcs_recognized_keys)
             femm = get(() -> error("Must get femm!"), convbc, "femm")
@@ -152,9 +152,9 @@ function steadystate(modeldata::FDataDict)
             fixed = ones(length(fenids))
             T_fixed = zeros(FT, length(fenids)) # default is zero
             ambient_temperature = get(convbc, "ambient_temperature", nothing)
-            if ambient_temperature != nothing  # if given as nonzero
+            if ambient_temperature !== nothing  # if given as nonzero
                 if (typeof(ambient_temperature) <: Function) # given by function
-                    for k in 1:length(fenids)
+                    for k in eachindex(fenids)
                         T_fixed[k] = ambient_temperature(geom.values[fenids[k], :])
                     end
                 else # it could be a constant
@@ -171,8 +171,8 @@ function steadystate(modeldata::FDataDict)
 
     # # Process the flux boundary condition
     flux_bcs = get(modeldata, "flux_bcs", nothing)
-    if (flux_bcs != nothing)
-        for j in 1:length(flux_bcs)
+    if (flux_bcs !== nothing)
+        for j in eachindex(flux_bcs)
             fluxbc = flux_bcs[j]
             dcheck!(fluxbc, flux_bcs_recognized_keys)
             normal_flux = fluxbc["normal_flux"]
@@ -199,7 +199,7 @@ function steadystate(modeldata::FDataDict)
 
     # Loads due to the essential boundary conditions on the temperature field
     essential_bcs = get(modeldata, "essential_bcs", nothing)
-    if (essential_bcs != nothing) # there was at least one EBC applied
+    if (essential_bcs !== nothing) # there was at least one EBC applied
         F_f .+= -K_fd * T_d
     end
 

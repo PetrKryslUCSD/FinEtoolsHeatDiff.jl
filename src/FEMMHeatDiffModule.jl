@@ -214,7 +214,7 @@ function inspectintegpoints(self::FEMMHeatDiff,
     out1 = fill(zero(FT), sdim) # output -- buffer
     out = fill(zero(FT), sdim)# output -- buffer
     # Loop over  all the elements and all the quadrature points within them
-    for ilist in 1:length(felist) # Loop over elements
+    for ilist in eachindex(felist) # Loop over elements
         i = felist[ilist]
         gathervalues_asmat!(geom, ecoords, fes.conn[i])
         gathervalues_asvec!(temp, Te, fes.conn[i])# retrieve element temperatures

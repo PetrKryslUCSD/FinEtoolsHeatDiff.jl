@@ -32,4 +32,7 @@ using FinEtoolsHeatDiff.FEMMHeatDiffSurfModule: FEMMHeatDiffSurf,
 # Exported: type  for linear heat diffusion boundary conditions and discretization methods
 export FEMMHeatDiffSurf, surfacetransfer, surfacetransferloads
 
+# Enable LSP look-up in test modules.
+if false include("../test/runtests.jl") end
+
 end # module
