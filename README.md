@@ -15,51 +15,7 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 - 05/20/2023: Updated for Julia 1.9.
 - 04/22/2023: Updated for generic FinEtools.
 
-[Past news](oldnews.md)
-
-## How to test the package
-
-Here is a record of a session to install this package and test it. You should
-see something similar. The Git bash running on Windows or the Powershell could be used.
-
-Clone the repo:
-```
-$ git clone https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl.git
-Cloning into 'FinEtoolsHeatDiff.jl'...
-[Further output suppressed...]
-```
-Change your working directory, and run Julia:
-```
-$ cd FinEtoolsHeatDiff.jl/
-$ julia-1.9.0\bin\julia.exe
-               _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.9.0 (2023-05-07)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
-|__/                   |
-```
-Activate and instantiate the environment:
-```
-(@v1.9) pkg> activate .; instantiate
-  Activating project at `C:\Users\...\FinEtoolsHeatDiff.jl`
-```
-Test the package:
-```
-(FinEtoolsHeatDiff) pkg> test
-     Testing FinEtoolsHeatDiff
-[Output suppressed...]
-
-     Testing Running tests...
-Test Summary:  | Pass  Total     Time
-Heat diffusion |   62     62  1m08.7s
- 68.849887 seconds (85.11 M allocations: 6.588 GiB, 2.97% gc time, 85.82% compilation time)
-     Testing FinEtoolsHeatDiff tests passed
-
-(FinEtoolsHeatDiff) pkg>
-```
+[Past news](#past-news)
 
 ## Examples
 
@@ -87,3 +43,12 @@ For instance
 ```
 julia> include("steady_state/2-d\\Poisson_examples.jl"); Poisson_examples.allrun()  
 ```
+
+## <a name="past-news"></a>Past news
+
+- 03/08/2022: Introduced incompatible change of the assemblers (FinEtools 6.0.1).
+- 05/05/2022: Renamed the branch `main`. Updated for Julia 1.7.
+- 05/23/2021: Updated for Julia 1.6.
+- 10/11/2019: Corrected design flaw in matrix utilities.
+- 08/30/2019: A transient heat-conduction example added.
+- 06/11/2019: Applications are now separated  out from the `FinEtools` package.
