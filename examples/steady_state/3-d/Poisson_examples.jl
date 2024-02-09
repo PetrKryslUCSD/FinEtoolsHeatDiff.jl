@@ -16,9 +16,9 @@ using ChunkSplitters
 using DataDrop
 using SparseArrays: lu
 
-include("adhoc_assembler.jl")
-include("dict_assembler.jl")
-include("sparspak_assembler.jl")
+# include("adhoc_assembler.jl")
+# include("dict_assembler.jl")
+# include("sparspak_assembler.jl")
 
 function Poisson_FE_H20_example(N = 25)
     println("""
@@ -31,9 +31,9 @@ function Poisson_FE_H20_example(N = 25)
     """)
     t0 = time()
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature1
@@ -60,8 +60,8 @@ function Poisson_FE_H20_example(N = 25)
     println("Conductivity")
     @time K = conductivity(femm, geom, Temp)
     println("Internal heat generation")
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     @time F1 = distribloads(femm, geom, Temp, fi, 3)
     println("Solution of the system")
     @time solve_blocked!(Temp, K, F1)
@@ -87,9 +87,9 @@ function Poisson_FE_T10_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature
@@ -113,7 +113,7 @@ function Poisson_FE_T10_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println("Number of free degrees of freedom: $(Temp.nfreedofs)")
+    println("Number of free degrees of freedom: $(nfreedofs(Temp))")
     t1 = time()
 
     material = MatHeatDiff(thermal_conductivity)
@@ -125,8 +125,8 @@ function Poisson_FE_T10_example(N = 25)
     println("Nonzero EBC")
     F2 = nzebcloadsconductivity(femm, geom, Temp)
     println("Internal heat generation")
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution of the system")
@@ -156,9 +156,9 @@ function Poisson_FE_T4_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature
@@ -191,7 +191,7 @@ function Poisson_FE_T4_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println("Number of free degrees of freedom: $(Temp.nfreedofs)")
+    println("Number of free degrees of freedom: $(Tempnfreedofs())")
     t1 = time()
 
     material = MatHeatDiff(thermal_conductivity)
@@ -203,8 +203,8 @@ function Poisson_FE_T4_example(N = 25)
     println("Nonzero EBC")
     F2 = nzebcloadsconductivity(femm, geom, Temp)
     println("Internal heat generation")
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution of the system")
@@ -230,9 +230,9 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature1
@@ -276,21 +276,21 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
         nomatrixresult = true
-        return SysmatAssemblerSparseAdHoc(buffer_length,
+        return SysmatAssemblerSparse(buffer_length,
             matbuffer,
             rowbuffer,
             colbuffer,
             buffer_pointer,
             ndofs_row,
             ndofs_col,
-            nomatrixresult)
+            nomatrixresult, false)
     end
 
     nne = nodesperelem(fes)
 
     @info("Conductivity: serial")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0, true)
+    a = SysmatAssemblerSparse(0.0, true)
     conductivity(femm, a, geom, Temp)
     @info "Conductivity done serial $(time() - start)"
     # DataDrop.store_matrix("I", a.rowbuffer)
@@ -305,18 +305,13 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
 
     @info("Conductivity: parallel")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0)
+    a = SysmatAssemblerSparse(0.0, true)
     elem_mat_nrows = nne
     elem_mat_ncols = nne
     elem_mat_nmatrices = count(fes)
-    ndofs_row = Temp.nfreedofs
-    ndofs_col = Temp.nfreedofs
-    startassembly!(a,
-        elem_mat_nrows,
-        elem_mat_ncols,
-        elem_mat_nmatrices,
-        ndofs_row,
-        ndofs_col)
+    ndofs_row = nalldofs(Temp)
+    ndofs_col = nalldofs(Temp)
+    startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
     ntasks = Base.Threads.nthreads() - 1
     @assert ntasks >= 1
     iend = 0
@@ -348,8 +343,8 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
 
     F2 = nzebcloadsconductivity(femm, geom, Temp)
 
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     U = K \ (F1 + F2)
@@ -375,9 +370,9 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature1
@@ -400,7 +395,7 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    @info("Number of free degrees of freedom: $(Temp.nfreedofs)")
+    @info("Number of free degrees of freedom: $(Tempnfreedofs())")
 
     material = MatHeatDiff(thermal_conductivity)
 
@@ -421,21 +416,21 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
         nomatrixresult = true
-        return SysmatAssemblerSparseAdHoc(buffer_length,
+        return SysmatAssemblerSparse(buffer_length,
             matbuffer,
             rowbuffer,
             colbuffer,
             buffer_pointer,
             ndofs_row,
             ndofs_col,
-            nomatrixresult)
+            nomatrixresult, false)
     end
 
     nne = nodesperelem(fes)
 
     @info("Conductivity: serial")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0, true)
+    a = SysmatAssemblerSparse(0.0, true)
     conductivity(femm, a, geom, Temp)
     @info "Conductivity done serial $(time() - start)"
     # DataDrop.store_matrix("I", a.rowbuffer[1:a.buffer_pointer-1])
@@ -450,18 +445,13 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
 
     @info("Conductivity: parallel")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0)
+    a = SysmatAssemblerSparse(0.0)
     elem_mat_nrows = nne
     elem_mat_ncols = nne
     elem_mat_nmatrices = count(fes)
-    ndofs_row = Temp.nfreedofs
-    ndofs_col = Temp.nfreedofs
-    startassembly!(a,
-        elem_mat_nrows,
-        elem_mat_ncols,
-        elem_mat_nmatrices,
-        ndofs_row,
-        ndofs_col)
+    ndofs_row = nalldofs(Temp)
+    ndofs_col = nalldofs(Temp)
+    startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
     @info "Creating thread structures $(time() - start)"
     ntasks = Base.Threads.nthreads()
     _a = []
@@ -493,8 +483,8 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
 
     F2 = nzebcloadsconductivity(femm, geom, Temp)
 
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     U = K \ (F1 + F2)
@@ -520,9 +510,9 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature1
@@ -545,7 +535,7 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    @info("Number of free degrees of freedom: $(Temp.nfreedofs)")
+    @info("Number of free degrees of freedom: $(Tempnfreedofs())")
 
     material = MatHeatDiff(thermal_conductivity)
 
@@ -559,28 +549,28 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
         return buffer_range, iend
     end
 
-    function _task_local_assembler(a, buffer_range)
+    function _thread_local_assembler(a, buffer_range)
         buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
         matbuffer = view(a.matbuffer, buffer_range)
         rowbuffer = view(a.rowbuffer, buffer_range)
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
         nomatrixresult = true
-        return SysmatAssemblerSparseAdHoc(buffer_length,
+        return SysmatAssemblerSparse(buffer_length,
             matbuffer,
             rowbuffer,
             colbuffer,
             buffer_pointer,
             ndofs_row,
             ndofs_col,
-            nomatrixresult)
+            nomatrixresult, false)
     end
 
     nne = nodesperelem(fes)
 
     @info("Conductivity: serial")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0, true)
+    a = SysmatAssemblerSparse(0.0, true)
     conductivity(femm, a, geom, Temp)
     @info "Conductivity done serial $(time() - start)"
     # DataDrop.store_matrix("I", a.rowbuffer[1:a.buffer_pointer-1])
@@ -595,18 +585,13 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
 
     @info("Conductivity: parallel")
     start = time()
-    a = SysmatAssemblerSparseAdHoc(0.0)
+    a = SysmatAssemblerSparse(0.0, false)
     elem_mat_nrows = nne
     elem_mat_ncols = nne
     elem_mat_nmatrices = count(fes)
-    ndofs_row = Temp.nfreedofs
-    ndofs_col = Temp.nfreedofs
-    startassembly!(a,
-        elem_mat_nrows,
-        elem_mat_ncols,
-        elem_mat_nmatrices,
-        ndofs_row,
-        ndofs_col)
+    ndofs_row = nalldofs(Temp)
+    ndofs_col = nalldofs(Temp)
+    startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
     @info "Creating thread structures $(time() - start)"
     ntasks = Base.Threads.nthreads()
     _a = []
@@ -617,7 +602,7 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
             elem_mat_ncols,
             ch[1],
             iend)
-        push!(_a, _task_local_assembler(a, buffer_range))
+        push!(_a, _thread_local_assembler(a, buffer_range))
         push!(_r, ch[1])
     end
     @info "Finished $(time() - start)"
@@ -638,8 +623,8 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
 
     F2 = nzebcloadsconductivity(femm, geom, Temp)
 
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     U = K \ (F1 + F2)
@@ -665,9 +650,9 @@ function Poisson_FE_T4_altass_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
-    function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
     end
     tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature
@@ -691,7 +676,7 @@ function Poisson_FE_T4_altass_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println("Number of free degrees of freedom: $(Temp.nfreedofs)")
+    println("Number of free degrees of freedom: $(Tempnfreedofs())")
     t1 = time()
 
     material = MatHeatDiff(thermal_conductivity)
@@ -720,8 +705,8 @@ function Poisson_FE_T4_altass_example(N = 25)
     println("Nonzero EBC")
     F2 = nzebcloadsconductivity(femm, geom, Temp)
     println("Internal heat generation")
-    # fi = ForceIntensity(FFlt, getsource!);# alternative  specification
-    fi = ForceIntensity(FFlt[Q])
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution of the system")
@@ -751,24 +736,24 @@ function Poisson_FE_T4_altass_example(N = 25)
 end # Poisson_FE_T4_example
 
 function allrun()
-    println("#####################################################")
-    println("# Poisson_FE_H20_example ")
-    Poisson_FE_H20_example()
+    # println("#####################################################")
+    # println("# Poisson_FE_H20_example ")
+    # Poisson_FE_H20_example()
     println("#####################################################")
     println("# Poisson_FE_H20_parass_tasks_example ")
-    Poisson_FE_H20_parass_tasks_example()
-    println("#####################################################")
-    println("# Poisson_FE_H20_parass_threads_example ")
-    Poisson_FE_H20_parass_threads_example()
-    println("#####################################################")
-    println("# Poisson_FE_T10_example ")
-    Poisson_FE_T10_example()
-    println("#####################################################")
-    println("# Poisson_FE_T4_example ")
-    Poisson_FE_T4_example()
-    println("#####################################################")
-    println("# Poisson_FE_T4_altass_example ")
-    Poisson_FE_T4_altass_example()
+    Poisson_FE_H20_parass_tasks_example(60)
+    # println("#####################################################")
+    # println("# Poisson_FE_H20_parass_threads_example ")
+    # Poisson_FE_H20_parass_threads_example()
+    # println("#####################################################")
+    # println("# Poisson_FE_T10_example ")
+    # Poisson_FE_T10_example()
+    # println("#####################################################")
+    # println("# Poisson_FE_T4_example ")
+    # Poisson_FE_T4_example()
+    # println("#####################################################")
+    # println("# Poisson_FE_T4_altass_example ")
+    # Poisson_FE_T4_altass_example()
 end # function allrun
 
 @info "All examples may be executed with "
