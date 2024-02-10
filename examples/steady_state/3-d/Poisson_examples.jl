@@ -293,11 +293,13 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
     @info("Conductivity: serial")
     start = time()
     a = SysmatAssemblerSparse(0.0)
+    a.nomatrixresult = true
     conductivity(femm, a, geom, Temp)
     @info "Conductivity done serial $(time() - start)"
     # DataDrop.store_matrix("I", a.rowbuffer)
     # DataDrop.store_matrix("J", a.colbuffer)
     # DataDrop.store_matrix("V", a.matbuffer)
+    a.nomatrixresult = false
     K = makematrix!(a)
     @info "All done serial $(time() - start)"
     K = nothing
@@ -422,7 +424,8 @@ function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nt
 
     @info("Conductivity: serial")
     start = time()
-    a = SysmatAssemblerSparse(0.0, true)
+    a = SysmatAssemblerSparse(0.0)
+    a.nomatrixresult = true
     conductivity(femm, a, geom, Temp)
     @info "Conductivity done serial $(time() - start)"
     # DataDrop.store_matrix("I", a.rowbuffer[1:a.buffer_pointer-1])
