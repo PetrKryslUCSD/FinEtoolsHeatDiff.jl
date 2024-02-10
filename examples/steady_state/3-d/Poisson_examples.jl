@@ -191,7 +191,7 @@ function Poisson_FE_T4_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println("Number of free degrees of freedom: $(Tempnfreedofs())")
+    println("Number of free degrees of freedom: $(nfreedofs(Temp))")
     t1 = time()
 
     material = MatHeatDiff(thermal_conductivity)
@@ -395,7 +395,7 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    @info("Number of free degrees of freedom: $(Tempnfreedofs())")
+    @info("Number of free degrees of freedom: $(nfreedofs(Temp))")
 
     material = MatHeatDiff(thermal_conductivity)
 
@@ -535,7 +535,7 @@ function Poisson_FE_H8_parass_threads_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    @info("Number of free degrees of freedom: $(Tempnfreedofs())")
+    @info("Number of free degrees of freedom: $(nfreedofs(Temp))")
 
     material = MatHeatDiff(thermal_conductivity)
 
@@ -676,7 +676,7 @@ function Poisson_FE_T4_altass_example(N = 25)
     applyebc!(Temp)
     numberdofs!(Temp)
 
-    println("Number of free degrees of freedom: $(Tempnfreedofs())")
+    println("Number of free degrees of freedom: $(nfreedofs(Temp))")
     t1 = time()
 
     material = MatHeatDiff(thermal_conductivity)
@@ -739,12 +739,12 @@ function allrun()
     # println("#####################################################")
     # println("# Poisson_FE_H20_example ")
     # Poisson_FE_H20_example()
-    println("#####################################################")
-    println("# Poisson_FE_H20_parass_tasks_example ")
-    Poisson_FE_H20_parass_tasks_example(60)
     # println("#####################################################")
-    # println("# Poisson_FE_H20_parass_threads_example ")
-    # Poisson_FE_H20_parass_threads_example()
+    # println("# Poisson_FE_H20_parass_tasks_example ")
+    # Poisson_FE_H20_parass_tasks_example(60)
+    println("#####################################################")
+    println("# Poisson_FE_H20_parass_threads_example ")
+    Poisson_FE_H20_parass_threads_example()
     # println("#####################################################")
     # println("# Poisson_FE_T10_example ")
     # Poisson_FE_T10_example()
