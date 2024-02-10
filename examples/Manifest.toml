@@ -244,9 +244,9 @@ version = "1.9.3"
 
 [[deps.FinEtools]]
 deps = ["ChunkSplitters", "DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorization", "Printf", "Random", "SparseArrays", "Statistics", "SymRCM", "Test", "Unicode", "WriteVTK"]
-git-tree-sha1 = "0287610a59506adb37f2a603680535f44bfbd8dd"
+git-tree-sha1 = "ba9aeae3d26e47c8468d12e8009f46b943d2e12b"
 uuid = "91bb5406-6c9a-523d-811d-0644c4229550"
-version = "7.3.2"
+version = "7.3.4"
 
 [[deps.FinEtoolsHeatDiff]]
 deps = ["Arpack", "FinEtools", "LinearAlgebra", "SparseArrays", "Statistics", "Test"]
