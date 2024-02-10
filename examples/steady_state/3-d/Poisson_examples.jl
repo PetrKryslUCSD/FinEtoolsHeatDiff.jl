@@ -226,7 +226,8 @@ function Poisson_FE_T4_example(N = 25)
     true
 end # Poisson_FE_T4_example
 
-function Poisson_FE_H20_parass_tasks_example(N = 25)
+function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthreads() - 1)
+    @assert ntasks >= 1
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -312,8 +313,6 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
     ndofs_row = nalldofs(Temp)
     ndofs_col = nalldofs(Temp)
     startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
-    ntasks = Base.Threads.nthreads() - 1
-    @assert ntasks >= 1
     iend = 0
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
@@ -366,7 +365,8 @@ function Poisson_FE_H20_parass_tasks_example(N = 25)
     true
 end # Poisson_FE_H20_parass_tasks_example
 
-function Poisson_FE_H20_parass_threads_example(N = 25)
+function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nthreads() - 1)
+    @assert ntasks >= 1
     @info "Starting"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -453,7 +453,6 @@ function Poisson_FE_H20_parass_threads_example(N = 25)
     ndofs_col = nalldofs(Temp)
     startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
     @info "Creating thread structures $(time() - start)"
-    ntasks = Base.Threads.nthreads()
     _a = []
     _r = []
     iend = 0
