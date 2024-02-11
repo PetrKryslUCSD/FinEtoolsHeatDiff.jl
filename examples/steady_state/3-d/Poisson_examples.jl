@@ -312,33 +312,23 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
     ndofs_row = nalldofs(Temp)
     ndofs_col = nalldofs(Temp)
     startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
-    _fa = []
-    _b = []
-    _ch = [ch for ch in chunks(1:count(fes), ntasks)]
     iend = 0
-    for ch in _ch
-        buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
-        push!(_b, buffer_range)
-    end
-    a.buffer_pointer = iend  # It is very important to inform the assembly buffer where the data are
-    @info "Prepare ranges $(time() - start)"
-    Threads.@threads for j in eachindex(_ch)
-        ch = _ch[j]; b = _b[j]
-        push!(_fa, (FEMMHeatDiff(IntegDomain(subset(fes, ch[1]), GaussRule(3, 3)), material),
-            _task_local_assembler(a, b)))
-    end
-    @info "Prepare FEMMs, local assemblers $(time() - start)"
     Threads.@sync begin
-        for (ch1, (f1, a1)) in zip(_ch, _fa)
-            @info "$(ch1[2]): Started $(time() - start)"
-            Threads.@spawn let 
-                @info "$(ch1[2]): Spawned $(time() - start)"
-                conductivity(f1, a1, geom, Temp)
-                @info "$(ch1[2]): Finished $(time() - start)"
+        for ch in chunks(1:count(fes), ntasks)
+            @info "$(ch[2]): Started $(time() - start)"
+            buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+            Threads.@spawn let r = $ch[1], b = $buffer_range
+                @info "$(ch[2]): Spawned $(time() - start)"
+                femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
+                _a = _task_local_assembler(a, b)
+                @info "$(ch[2]): Started conductivity $(time() - start)"
+                conductivity(femm1, _a, geom, Temp)
+                @info "$(ch[2]): Finished $(time() - start)"
             end
         end
     end
     @info "Started make-matrix $(time() - start)"
+    a.buffer_pointer = iend
     K = makematrix!(a)
     @info "All done $(time() - start)"
     if early_return
