@@ -321,11 +321,13 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
         push!(_b, buffer_range)
     end
     a.buffer_pointer = iend  # It is very important to inform the assembly buffer where the data are
+    @info "Prepare ranges $(time() - start)"
     Threads.@threads for j in eachindex(_ch)
         ch = _ch[j]; b = _b[j]
         push!(_fa, (FEMMHeatDiff(IntegDomain(subset(fes, ch[1]), GaussRule(3, 3)), material),
             _task_local_assembler(a, b)))
     end
+    @info "Prepare FEMMs, local assemblers $(time() - start)"
     Threads.@sync begin
         for (ch1, (f1, a1)) in zip(_ch, _fa)
             @info "$(ch1[2]): Started $(time() - start)"
