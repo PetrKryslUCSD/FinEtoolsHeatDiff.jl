@@ -1,6 +1,9 @@
-using Revise; using Pkg; Pkg.activate("."); Pkg.instantiate();
+using Revise;
+using Pkg;
+Pkg.activate(".");
+Pkg.instantiate();
 using LinearAlgebra
-@show Threads.nthreads()                                                        
+@show Threads.nthreads()
 @show LinearAlgebra.BLAS.get_num_threads()
 include(joinpath(pwd(), "steady_state/3-d/Poisson_examples.jl"))
 using .Main.Poisson_examples;

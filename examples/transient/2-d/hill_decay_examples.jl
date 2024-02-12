@@ -6,7 +6,7 @@ import LinearAlgebra: cholesky
 using PlotlyLight
 
 function hill_decay_t3()
-    thermal_conductivity = [i == j ? 0.2 : zero(FFlt) for i in 1:2, j in 1:2] # conductivity matrix
+    thermal_conductivity = [i == j ? 0.2 : zero(FFlt) for i = 1:2, j = 1:2] # conductivity matrix
     Width = 60.0
     Height = 40.0
     N = 10
@@ -19,18 +19,20 @@ function hill_decay_t3()
     tolerance = Width / N / 100
 
     fens, fes = T3block(Width, Height, N, N)
-    for i in 1:count(fens)
+    for i = 1:count(fens)
         fens.xyz[i, 1] -= Width / 2
         fens.xyz[i, 2] -= Height / 2
     end
-    l1 = selectnode(fens;
+    l1 = selectnode(
+        fens;
         box = [Width / 2 Width / 2 Height / 2 Height / 2],
-        inflate = tolerance)
+        inflate = tolerance,
+    )
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
-    for i in 1:count(fens)
+    for i = 1:count(fens)
         Temp.values[i] = T0(fens.xyz[i, :]...)
     end
 

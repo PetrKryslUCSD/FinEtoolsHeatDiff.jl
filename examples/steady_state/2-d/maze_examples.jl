@@ -15,7 +15,7 @@ function maze_1_T3_example()
     kappa = [1.0 0; 0 1.0] # conductivity matrix
     magn = 0.09# heat flux along the boundary
     a, b, d = 2.3, 0.05, 12
-    v = [0 0; a 0; a d; a+b d; a+b 0; 2 * a+b 0; 2 * a+b d+a; 0 d+a]
+    v = [0 0; a 0; a d; a+b d; a+b 0; 2*a+b 0; 2*a+b d+a; 0 d+a]
 
     thickness = 1.0
     tolerance = min(a, b, d) / 10000
@@ -61,11 +61,13 @@ function maze_1_T3_example()
     solve_blocked!(Temp, K, F1 + F2)
 
     File = "maze_1_T3_example-T.vtk"
-    vtkexportmesh(File,
+    vtkexportmesh(
+        File,
         connasarray(fes),
         [geom.values Temp.values],
         FinEtools.MeshExportModule.VTK.T3;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
     @async run(`"paraview.exe" $File`)
 
     qplocs = []
@@ -76,14 +78,16 @@ function maze_1_T3_example()
         push!(qpfluxes, copy(out))
         return (qplocs, qpfluxes)
     end
-    idat = inspectintegpoints(femm,
+    idat = inspectintegpoints(
+        femm,
         geom,
         NodalField([1.0]),
         Temp,
         collect(1:count(fes)),
         inspector,
         (qplocs, qpfluxes),
-        :heatflux)
+        :heatflux,
+    )
 
     File = "maze_1_T3_example-q.vtk"
     vtkexportvectors(File, qplocs, [("heatflux", qpfluxes)])

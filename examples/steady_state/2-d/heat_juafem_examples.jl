@@ -9,7 +9,7 @@ function heat_juafem_example()
     t0 = time()
 
     A = 2.0
-    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i in 1:2, j in 1:2] # conductivity matrix
+    thermal_conductivity = [i == j ? one(FFlt) : zero(FFlt) for i = 1:2, j = 1:2] # conductivity matrix
     function getsource!(forceout::FFltVec, XYZ::FFltMat, tangents::FFltMat, fe_label::FInt)
         forceout[1] = 1.0 #heat source
     end
@@ -24,13 +24,11 @@ function heat_juafem_example()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     println("Searching nodes  for BC")
-    @time l1 = selectnode(fens;
-        box = [-A / 2 -A / 2 -A / 2 A / 2],
-        inflate = 1.0 / N / 100.0)
+    @time l1 =
+        selectnode(fens; box = [-A / 2 -A / 2 -A / 2 A / 2], inflate = 1.0 / N / 100.0)
     @time l2 = selectnode(fens; box = [A / 2 A / 2 -A / 2 A / 2], inflate = 1.0 / N / 100.0)
-    @time l3 = selectnode(fens;
-        box = [-A / 2 A / 2 -A / 2 -A / 2],
-        inflate = 1.0 / N / 100.0)
+    @time l3 =
+        selectnode(fens; box = [-A / 2 A / 2 -A / 2 -A / 2], inflate = 1.0 / N / 100.0)
     @time l4 = selectnode(fens; box = [-A / 2 A / 2 A / 2 A / 2], inflate = 1.0 / N / 100.0)
     List = vcat(l1, l2, l3, l4)
     setebc!(Temp, List, true, 1, 0.0)

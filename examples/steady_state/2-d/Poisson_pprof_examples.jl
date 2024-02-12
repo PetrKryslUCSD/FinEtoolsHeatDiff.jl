@@ -5,6 +5,8 @@ using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
+using Profile
+using PProf
 
 function Poisson_FE_example()
     println("""
@@ -55,7 +57,16 @@ function Poisson_FE_example()
     femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1)), material)
 
     println("Conductivity")
-    @time K = conductivity(femm, geom, Temp)
+    Profile.Allocs.clear()
+    Profile.init(n = 10^7, delay = 0.00001)
+    Profile.Allocs.@profile sample_rate = 0.1 conductivity(femm, geom, Temp)
+    PProf.Allocs.pprof()
+    return
+    # K = conductivity(femm, geom, Temp)
+    # Profile.clear()
+    # @profile K = conductivity(femm, geom, Temp)
+    # Profile.print()
+    # @time K = conductivity(femm, geom, Temp)
     println("Internal heat generation")
     # function getsource!(forceout, XYZ, tangents, fe_label)
     #   forceout[1] = Q; #heat source
@@ -285,15 +296,15 @@ function allrun()
     println("#####################################################")
     println("# Poisson_FE_example ")
     Poisson_FE_example()
-    println("#####################################################")
-    println("# Poisson_FE_example_algo ")
-    Poisson_FE_example_algo()
-    println("#####################################################")
-    println("# Poisson_FE_example_csys_1 ")
-    Poisson_FE_example_csys_1()
-    println("#####################################################")
-    println("# Poisson_FE_Q4_example ")
-    Poisson_FE_Q4_example()
+    # println("#####################################################")
+    # println("# Poisson_FE_example_algo ")
+    # Poisson_FE_example_algo()
+    # println("#####################################################")
+    # println("# Poisson_FE_example_csys_1 ")
+    # Poisson_FE_example_csys_1()
+    # println("#####################################################")
+    # println("# Poisson_FE_Q4_example ")
+    # Poisson_FE_Q4_example()
 end # function allrun
 
 @info "All examples may be executed with "

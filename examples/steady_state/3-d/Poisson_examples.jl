@@ -31,7 +31,7 @@ function Poisson_FE_H20_example(N = 25)
     """)
     t0 = time()
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -51,7 +51,7 @@ function Poisson_FE_H20_example(N = 25)
     l6 = selectnode(fens; box = [0.0 A 0.0 A A A], inflate = Tolerance)
     List = vcat(l1, l2, l3, l4, l5, l6)
     setebc!(Temp, List, true, 1, tempf(geom.values[List, :])[:])
-    
+
     numberdofs!(Temp)
     println("Number of free degrees of freedom: $(nfreedofs(Temp))")
     t1 = time()
@@ -69,7 +69,7 @@ function Poisson_FE_H20_example(N = 25)
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k in axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     println("Error =$Error")
@@ -87,7 +87,7 @@ function Poisson_FE_T10_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -122,22 +122,19 @@ function Poisson_FE_T10_example(N = 25)
 
     println("Conductivity")
     K = conductivity(femm, geom, Temp)
-    println("Nonzero EBC")
-    F2 = nzebcloadsconductivity(femm, geom, Temp)
+    
     println("Internal heat generation")
     # fi = ForceIntensity(Float64, getsource!);# alternative  specification
     fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
-
     println("Solution of the system")
-    U = K \ (F1 + F2)
-    scattersysvec!(Temp, U[:])
-
+    @time solve_blocked!(Temp, K, F1)
+    
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
 
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k  in  axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     println("Error =$Error")
@@ -156,7 +153,7 @@ function Poisson_FE_T4_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -200,22 +197,20 @@ function Poisson_FE_T4_example(N = 25)
 
     println("Conductivity")
     K = conductivity(femm, geom, Temp)
-    println("Nonzero EBC")
-    F2 = nzebcloadsconductivity(femm, geom, Temp)
+    
     println("Internal heat generation")
     # fi = ForceIntensity(Float64, getsource!);# alternative  specification
     fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
 
     println("Solution of the system")
-    U = K \ (F1 + F2)
-    scattersysvec!(Temp, U[:])
+    @time solve_blocked!(Temp, K, F1)
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
 
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k in axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     println("Error =$Error")
@@ -226,12 +221,16 @@ function Poisson_FE_T4_example(N = 25)
     true
 end # Poisson_FE_T4_example
 
-function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthreads() - 1, early_return = false)
+function Poisson_FE_H20_parass_tasks_example(
+    N = 25,
+    ntasks = Base.Threads.nthreads() - 1,
+    early_return = false,
+)
     @assert ntasks >= 1
     @info "Starting Poisson_FE_H20_parass_tasks_example with $(ntasks) tasks"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -278,14 +277,17 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
         buffer_pointer = 1
         nomatrixresult = true
         force_init = false
-        return SysmatAssemblerSparse(buffer_length,
+        return SysmatAssemblerSparse(
+            buffer_length,
             matbuffer,
             rowbuffer,
             colbuffer,
             buffer_pointer,
             ndofs_row,
             ndofs_col,
-            nomatrixresult, force_init)
+            nomatrixresult,
+            force_init,
+        )
     end
 
     nne = nodesperelem(fes)
@@ -311,12 +313,18 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
     elem_mat_nmatrices = count(fes)
     ndofs_row = nalldofs(Temp)
     ndofs_col = nalldofs(Temp)
-    startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
+    startassembly!(
+        a,
+        elem_mat_nrows * elem_mat_ncols * elem_mat_nmatrices,
+        ndofs_row,
+        ndofs_col,
+    )
     iend = 0
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
             @info "$(ch[2]): Started $(time() - start)"
-            buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+            buffer_range, iend =
+                _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
             Threads.@spawn let r = $ch[1], b = $buffer_range
                 @info "$(ch[2]): Spawned $(time() - start)"
                 femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
@@ -341,27 +349,33 @@ function Poisson_FE_H20_parass_tasks_example(N = 25, ntasks =  Base.Threads.nthr
     solve_blocked!(Temp, K, F1)
 
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k in axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     @info("Error =$Error")
 
     File = "Poisson_FE_H20_parass_tasks_example.vtk"
-    MeshExportModule.VTK.vtkexportmesh(File,
+    MeshExportModule.VTK.vtkexportmesh(
+        File,
         fes.conn,
         geom.values,
         MeshExportModule.VTK.H20;
-        scalars = [("T", Temp.values)])
+        scalars = [("T", Temp.values)],
+    )
 
     true
 end # Poisson_FE_H20_parass_tasks_example
 
-function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nthreads() - 1, early_return = false)
+function Poisson_FE_H20_parass_threads_example(
+    N = 25,
+    ntasks = Base.Threads.nthreads() - 1,
+    early_return = false,
+)
     @assert ntasks >= 1
     @info "Starting Poisson_FE_H20_parass_threads_example with $(ntasks) tasks"
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -407,14 +421,17 @@ function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nt
         colbuffer = view(a.colbuffer, buffer_range)
         buffer_pointer = 1
         nomatrixresult = true
-        return SysmatAssemblerSparse(buffer_length,
+        return SysmatAssemblerSparse(
+            buffer_length,
             matbuffer,
             rowbuffer,
             colbuffer,
             buffer_pointer,
             ndofs_row,
             ndofs_col,
-            nomatrixresult, false)
+            nomatrixresult,
+            false,
+        )
     end
 
     nne = nodesperelem(fes)
@@ -443,13 +460,19 @@ function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nt
     elem_mat_nmatrices = count(fes)
     ndofs_row = nalldofs(Temp)
     ndofs_col = nalldofs(Temp)
-    startassembly!(a, elem_mat_nrows *  elem_mat_ncols *  elem_mat_nmatrices, ndofs_row, ndofs_col)
+    startassembly!(
+        a,
+        elem_mat_nrows * elem_mat_ncols * elem_mat_nmatrices,
+        ndofs_row,
+        ndofs_col,
+    )
     @info "Creating thread structures $(time() - start)"
     _a = SysmatAssemblerSparse[]
     _r = []
     iend = 0
     for ch in chunks(1:count(fes), ntasks)
-        buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+        buffer_range, iend =
+            _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
         push!(_a, _task_local_assembler(a, buffer_range))
         push!(_r, ch[1])
     end
@@ -472,19 +495,21 @@ function Poisson_FE_H20_parass_threads_example(N = 25, ntasks =  Base.Threads.nt
     fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
     solve_blocked!(Temp, K, F1)
-    
+
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k in axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     @info("Error =$Error")
 
     File = "Poisson_FE_H20_parass_threads_example.vtk"
-    MeshExportModule.VTK.vtkexportmesh(File,
+    MeshExportModule.VTK.vtkexportmesh(
+        File,
         fes.conn,
         geom.values,
         MeshExportModule.VTK.H20;
-        scalars = [("T", Temp.values)])
+        scalars = [("T", Temp.values)],
+    )
 
     true
 end # Poisson_FE_H20_parass_threads_example
@@ -493,7 +518,7 @@ function Poisson_FE_T4_altass_example(N = 25)
     t0 = time()
 
     A = 1.0 # dimension of the domain (length of the side of the square)
-    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     Q = -6.0 # internal heat generation rate
     function getsource!(forceout, XYZ, tangents, feid, qpid)
         forceout[1] = Q #heat source
@@ -567,7 +592,7 @@ function Poisson_FE_T4_altass_example(N = 25)
     println("Solution time elapsed = $(time() - t1) [s]")
 
     Error = 0.0
-    for k in 1:size(fens.xyz, 1)
+    for k in axes(fens.xyz, 1)
         Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
     end
     println("Error =$Error")
@@ -579,21 +604,21 @@ function Poisson_FE_T4_altass_example(N = 25)
 end # Poisson_FE_T4_example
 
 function allrun()
-    # println("#####################################################")
-    # println("# Poisson_FE_H20_example ")
-    # Poisson_FE_H20_example()
+    println("#####################################################")
+    println("# Poisson_FE_H20_example ")
+    Poisson_FE_H20_example()
     println("#####################################################")
     println("# Poisson_FE_H20_parass_tasks_example ")
     Poisson_FE_H20_parass_tasks_example(30, 2)
     println("#####################################################")
     println("# Poisson_FE_H20_parass_threads_example ")
     Poisson_FE_H20_parass_threads_example(30, 2)
-    # println("#####################################################")
-    # println("# Poisson_FE_T10_example ")
-    # Poisson_FE_T10_example()
-    # println("#####################################################")
-    # println("# Poisson_FE_T4_example ")
-    # Poisson_FE_T4_example()
+    println("#####################################################")
+    println("# Poisson_FE_T10_example ")
+    Poisson_FE_T10_example()
+    println("#####################################################")
+    println("# Poisson_FE_T4_example ")
+    Poisson_FE_T4_example()
     # println("#####################################################")
     # println("# Poisson_FE_T4_altass_example ")
     # Poisson_FE_T4_altass_example()

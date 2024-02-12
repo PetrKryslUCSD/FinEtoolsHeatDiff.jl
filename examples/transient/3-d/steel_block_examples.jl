@@ -14,8 +14,7 @@ using PlotlyLight
 
 function steel_block_m()
     # Thermal conductivity
-    thermal_conductivity = [i == j ? 44.0 * phun("W/K/m") : zero(FFlt)
-                            for i in 1:3, j in 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? 44.0 * phun("W/K/m") : zero(FFlt) for i = 1:3, j = 1:3] # conductivity matrix
     # Specific heat: the specific heat is per unit volume
     rho = 8000 * phun("kg/m^3")
     specific_heat = 470.0 * phun("J/kg/K") * rho
@@ -36,19 +35,25 @@ function steel_block_m()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     # Initial temperature
-    for i in 1:count(fens)
+    for i = 1:count(fens)
         Temp.values[i] = T0(fens.xyz[i, :]...)
     end
 
-    lx = selectnode(fens;
+    lx = selectnode(
+        fens;
         box = [dimensions[1] dimensions[1] -Inf Inf -Inf Inf],
-        inflate = tolerance)
-    ly = selectnode(fens;
+        inflate = tolerance,
+    )
+    ly = selectnode(
+        fens;
         box = [-Inf Inf dimensions[2] dimensions[2] -Inf Inf],
-        inflate = tolerance)
-    lz = selectnode(fens;
+        inflate = tolerance,
+    )
+    lz = selectnode(
+        fens;
         box = [-Inf Inf -Inf Inf dimensions[3] dimensions[3]],
-        inflate = tolerance)
+        inflate = tolerance,
+    )
     for (i, l) in enumerate([lx, ly, lz])
         setebc!(Temp, l, true, 1, Ts)
     end

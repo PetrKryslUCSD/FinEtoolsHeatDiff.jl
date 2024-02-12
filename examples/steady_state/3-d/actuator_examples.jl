@@ -79,9 +79,10 @@ function actuator2()
     cl = selectelem(fens, fes, box = [x0, x2, y0, y2, z0, z1], inflate = t / 100)
 
     hotfemm = FEMMHeatDiff(IntegDomain(subset(fes, cl), GaussRule(3, 3)), hotmater)
-    coldfemm = FEMMHeatDiff(IntegDomain(subset(fes, setdiff(collect(1:count(fes)), cl)),
-            GaussRule(3, 3)),
-        coldmater)
+    coldfemm = FEMMHeatDiff(
+        IntegDomain(subset(fes, setdiff(collect(1:count(fes)), cl)), GaussRule(3, 3)),
+        coldmater,
+    )
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
     fenids = selectnode(fens, box = [x0, x4, y0, y0, z0, z3], inflate = t / 1000) # fixed temperature on substrate
@@ -112,25 +113,31 @@ function actuator2()
     # Plot(Table([:x => y_o[ixo], :y => T_o[ixo]])), LegendEntry("cold leg"),
     # Plot(Table([:x => y_i[ixi], :y => T_i[ixi]])), LegendEntry("hot leg"))
 
-    lc = PlotlyLight.Config(x = vec(y_o[ixo]),
+    lc = PlotlyLight.Config(
+        x = vec(y_o[ixo]),
         y = vec(T_o[ixo]),
         name = "cold leg",
-        color = "rgb(0, 128, 191)")
-    lh = PlotlyLight.Config(x = vec(y_i[ixi]),
+        color = "rgb(0, 128, 191)",
+    )
+    lh = PlotlyLight.Config(
+        x = vec(y_i[ixi]),
         y = vec(T_i[ixi]),
         name = "hot leg",
         color = "rgb(200, 18, 91)",
-        mode = "lines+markers")
+        mode = "lines+markers",
+    )
     plt = PlotlyLight.Plot([lc, lh])
     plt.layout.xaxis.title = "x"
     plt.layout.yaxis.title = "T"
     display(plt)
 
     File = "a.vtk"
-    MeshExportModule.VTK.vtkexportmesh(File,
+    MeshExportModule.VTK.vtkexportmesh(
+        File,
         fens,
         fes;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
     @async run(`"paraview.exe" $File`)
     true
 end # actuator2

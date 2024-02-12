@@ -52,7 +52,7 @@ function T4NAFEMS_T3_algo()
 
     modeldata = nothing
     resultsTempA = FFlt[]
-    for nref in 1:5
+    for nref = 1:5
         t0 = time()
 
         # The mesh is created from two triangles to begin with
@@ -61,7 +61,7 @@ function T4NAFEMS_T3_algo()
         fens, newfes1, fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
         fes = cat(newfes1, fes2)
         # Refine the mesh desired number of times
-        for ref in 1:nref
+        for ref = 1:nref
             fens, fes = T3refine(fens, fes)
         end
         bfes = meshboundary(fes)
@@ -82,8 +82,10 @@ function T4NAFEMS_T3_algo()
         # accurate.
         l2 = selectelem(fens, bfes; box = [Width Width 0.0 Height], inflate = tolerance)
         l3 = selectelem(fens, bfes; box = [0.0 Width Height Height], inflate = tolerance)
-        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes, vcat(l2, l3)),
-                GaussRule(1, 3), Thickness), h)
+        cfemm = FEMMHeatDiffSurf(
+            IntegDomain(subset(bfes, vcat(l2, l3)), GaussRule(1, 3), Thickness),
+            h,
+        )
         convection1 = FDataDict("femm" => cfemm, "ambient_temperature" => 0.0)
 
         # The interior
@@ -91,10 +93,12 @@ function T4NAFEMS_T3_algo()
         region1 = FDataDict("femm" => femm)
 
         # Make the model data
-        modeldata = FDataDict("fens" => fens,
+        modeldata = FDataDict(
+            "fens" => fens,
             "regions" => [region1],
             "essential_bcs" => [essential1],
-            "convection_bcs" => [convection1])
+            "convection_bcs" => [convection1],
+        )
 
         # Call the solver
         modeldata = AlgoHeatDiffModule.steadystate(modeldata)
@@ -121,13 +125,19 @@ function T4NAFEMS_T3_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T3.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-        [geom.values Temp.values / 100], FinEtools.MeshExportModule.VTK.T3;
-        scalars = [("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T3--base.vtk",
+    vtkexportmesh(
+        "T4NAFEMS--T3.vtk",
+        connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values Temp.values / 100],
+        FinEtools.MeshExportModule.VTK.T3;
+        scalars = [("Temperature", Temp.values)],
+    )
+    vtkexportmesh(
+        "T4NAFEMS--T3--base.vtk",
         connasarray(regions[1]["femm"].integdomain.fes),
         [geom.values 0.0 * Temp.values / 100],
-        FinEtools.MeshExportModule.VTK.T3)
+        FinEtools.MeshExportModule.VTK.T3,
+    )
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the
@@ -220,7 +230,7 @@ function T4NAFEMS_T6_algo()
     modeldata = nothing
     resultsTempA = FFlt[]
     params = FFlt[]
-    for nref in 3:7
+    for nref = 3:7
         t0 = time()
 
         # The mesh is created from two triangles to begin with
@@ -229,7 +239,7 @@ function T4NAFEMS_T6_algo()
         fens, newfes1, fes2 = mergemeshes(fens, fes, fens2, fes2, tolerance)
         fes = cat(newfes1, fes2)
         # Refine the mesh desired number of times
-        for ref in 1:nref
+        for ref = 1:nref
             fens, fes = T3refine(fens, fes)
         end
         fens, fes = T3toT6(fens, fes)
@@ -251,8 +261,10 @@ function T4NAFEMS_T6_algo()
         # accurate.
         l2 = selectelem(fens, bfes; box = [Width Width 0.0 Height], inflate = tolerance)
         l3 = selectelem(fens, bfes; box = [0.0 Width Height Height], inflate = tolerance)
-        cfemm = FEMMHeatDiffSurf(IntegDomain(subset(bfes, vcat(l2, l3)),
-                GaussRule(1, 3), Thickness), h)
+        cfemm = FEMMHeatDiffSurf(
+            IntegDomain(subset(bfes, vcat(l2, l3)), GaussRule(1, 3), Thickness),
+            h,
+        )
         convection1 = FDataDict("femm" => cfemm, "ambient_temperature" => 0.0)
 
         # The interior
@@ -260,10 +272,12 @@ function T4NAFEMS_T6_algo()
         region1 = FDataDict("femm" => femm)
 
         # Make the model data
-        modeldata = FDataDict("fens" => fens,
+        modeldata = FDataDict(
+            "fens" => fens,
             "regions" => [region1],
             "essential_bcs" => [essential1],
-            "convection_bcs" => [convection1])
+            "convection_bcs" => [convection1],
+        )
 
         # Call the solver
         modeldata = AlgoHeatDiffModule.steadystate(modeldata)
@@ -287,8 +301,8 @@ function T4NAFEMS_T6_algo()
     println("$( params  )")
     println("$( resultsTempA  )")
 
-    solnestim, beta, c, residual = richextrapol(resultsTempA[(end - 2):end],
-        params[(end - 2):end])
+    solnestim, beta, c, residual =
+        richextrapol(resultsTempA[(end-2):end], params[(end-2):end])
     println("Solution estimate = $(solnestim)")
     println("Convergence rate estimate  = $(beta )")
 
@@ -296,13 +310,19 @@ function T4NAFEMS_T6_algo()
     geom = modeldata["geom"]
     Temp = modeldata["temp"]
     regions = modeldata["regions"]
-    vtkexportmesh("T4NAFEMS--T6.vtk", connasarray(regions[1]["femm"].integdomain.fes),
-        [geom.values Temp.values / 100], FinEtools.MeshExportModule.VTK.T6;
-        scalars = [("Temperature", Temp.values)])
-    vtkexportmesh("T4NAFEMS--T6--base.vtk",
+    vtkexportmesh(
+        "T4NAFEMS--T6.vtk",
+        connasarray(regions[1]["femm"].integdomain.fes),
+        [geom.values Temp.values / 100],
+        FinEtools.MeshExportModule.VTK.T6;
+        scalars = [("Temperature", Temp.values)],
+    )
+    vtkexportmesh(
+        "T4NAFEMS--T6--base.vtk",
         connasarray(regions[1]["femm"].integdomain.fes),
         [geom.values 0.0 * Temp.values / 100],
-        FinEtools.MeshExportModule.VTK.T6)
+        FinEtools.MeshExportModule.VTK.T6,
+    )
 
     # ##
     # # Richardson extrapolation is used to estimate the true solution from the

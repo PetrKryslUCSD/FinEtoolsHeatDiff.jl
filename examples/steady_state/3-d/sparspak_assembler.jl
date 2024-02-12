@@ -1,6 +1,6 @@
 using SparseArrays
-import FinEtools.AssemblyModule: AbstractSysmatAssembler,
-    startassembly!, assemble!, makematrix!
+import FinEtools.AssemblyModule:
+    AbstractSysmatAssembler, startassembly!, assemble!, makematrix!
 using Sparspak
 using Sparspak.SpkProblem: Problem, inaij!
 using Sparspak.SpkSparseSolver: SparseSolver, inmatrix!, findorder!, symbolicfactor!
@@ -17,8 +17,8 @@ Type for assembling a sparse global matrix from elementwise matrices.
     All fields of the datatype are private. The type is manipulated by the
     functions `startassembly!`, `assemble!`, and `makematrix!`.
 """
-mutable struct SysmatAssemblerSparspak{IT, FT} <: AbstractSysmatAssembler
-    problem::Problem{IT, FT}
+mutable struct SysmatAssemblerSparspak{IT,FT} <: AbstractSysmatAssembler
+    problem::Problem{IT,FT}
     ndofs_row::IT
     ndofs_col::IT
     nomatrixresult::Bool
@@ -119,21 +119,25 @@ dimensions on input. Otherwise, the buffers are left completely untouched.
     After the assembly, only the `(self.buffer_pointer - 1)` entries
     are meaningful numbers. Beware!
 """
-function startassembly!(self::SysmatAssemblerSparspak,
+function startassembly!(
+    self::SysmatAssemblerSparspak,
     elem_mat_nrows,
     elem_mat_ncols,
     elem_mat_nmatrices,
     ndofs_row,
     ndofs_col;
-    force_init = false)
+    force_init = false,
+)
     # Only resize the buffers if the pointer is less than 1
     if self.ndofs_col < 1 || self.ndofs_row < 1
         self.ndofs_row = ndofs_row
         self.ndofs_col = ndofs_col
-        self.problem = Problem(self.ndofs_row,
+        self.problem = Problem(
+            self.ndofs_row,
             self.ndofs_col,
             elem_mat_nrows * self.ndofs_col,
-            zero(eltype(self.problem.rhs)))
+            zero(eltype(self.problem.rhs)),
+        )
     end
     # Leave the buffers uninitialized, unless the user requests otherwise
     if force_init
@@ -152,20 +156,22 @@ end
 
 Assemble a rectangular matrix.
 """
-function assemble!(self::SysmatAssemblerSparspak,
+function assemble!(
+    self::SysmatAssemblerSparspak,
     mat::MT,
     dofnums_row::IT,
-    dofnums_col::IT) where {MT, IT}
+    dofnums_col::IT,
+) where {MT,IT}
     # Assembly of a rectangular matrix.
     # The method assembles a rectangular matrix using the two vectors of
     # equation numbers for the rows and columns.
     nrows = length(dofnums_row)
     ncolumns = length(dofnums_col)
     @assert size(mat) == (nrows, ncolumns)
-    @inbounds for j in 1:ncolumns
+    @inbounds for j = 1:ncolumns
         if 0 < dofnums_col[j] <= self.ndofs_col
             c = dofnums_col[j]
-            for i in 1:nrows
+            for i = 1:nrows
                 r = dofnums_row[i]
                 if 0 < dofnums_row[i] <= self.ndofs_row
                     inaij!(self.problem, r, c, mat[i, j])
@@ -181,7 +187,7 @@ end
 
 Make a sparse matrix.
 """
-function makematrix!(self::SysmatAssemblerSparspak{IT, FT}) where {IT, FT}
+function makematrix!(self::SysmatAssemblerSparspak{IT,FT}) where {IT,FT}
     @info "in makematrix!"
     s = SparseSolver(self.problem)
     if !self.nomatrixresult

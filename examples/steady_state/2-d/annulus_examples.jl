@@ -58,11 +58,13 @@ function annulus_Q4_example()
     println("Total time elapsed = ", time() - t0, "s")
 
     File = "annulus.vtk"
-    vtkexportmesh(File,
+    vtkexportmesh(
+        File,
         connasarray(fes),
         [geom.values Temp.values],
         FinEtools.MeshExportModule.VTK.Q4;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
     @async run(`"paraview.exe" $File`)
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
@@ -116,9 +118,12 @@ function annulus_Q4_example_algo()
     region1 = FDataDict("femm" => femm)
 
     # Make model data
-    modeldata = FDataDict("fens" => fens,
-        "regions" => [region1], "essential_bcs" => [essential1],
-        "flux_bcs" => [flux1, flux2])
+    modeldata = FDataDict(
+        "fens" => fens,
+        "regions" => [region1],
+        "essential_bcs" => [essential1],
+        "flux_bcs" => [flux1, flux2],
+    )
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
@@ -129,11 +134,13 @@ function annulus_Q4_example_algo()
     println("Total time elapsed = ", time() - t0, "s")
 
     # Postprocessing
-    vtkexportmesh("annulusmod.vtk",
+    vtkexportmesh(
+        "annulusmod.vtk",
         connasarray(fes),
         [geom.values Temp.values],
         FinEtools.MeshExportModule.VTK.Q4;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
 end # annulus_Q4_example_algo
 
 function annulus_Q8_example()
@@ -189,11 +196,13 @@ function annulus_Q8_example()
     println("Total time elapsed = ", time() - t0, "s")
 
     File = "annulusq8.vtk"
-    vtkexportmesh(File,
+    vtkexportmesh(
+        File,
         connasarray(fes),
         [geom.values Temp.values],
         FinEtools.MeshExportModule.VTK.Q8;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
 
     println("Minimum/maximum temperature= $(minimum(Temp.values))/$(maximum(Temp.values)))")
 
@@ -242,9 +251,8 @@ function ebc_annulus_Q4_algo()
     region1 = FDataDict("femm" => femm)
 
     # Make model data
-    modeldata = FDataDict("fens" => fens,
-        "regions" => [region1],
-        "convection_bcs" => [cbc1, cbc2])
+    modeldata =
+        FDataDict("fens" => fens, "regions" => [region1], "convection_bcs" => [cbc1, cbc2])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
@@ -256,11 +264,13 @@ function ebc_annulus_Q4_algo()
 
     # Postprocessing
     File = "annulusmod.vtk"
-    vtkexportmesh(File,
+    vtkexportmesh(
+        File,
         connasarray(fes),
         [geom.values Temp.values],
         FinEtools.MeshExportModule.VTK.Q4;
-        scalars = [("Temperature", Temp.values)])
+        scalars = [("Temperature", Temp.values)],
+    )
     # @async run(`"paraview.exe" $File`)
 
 end # ebc_annulus_Q4_algo

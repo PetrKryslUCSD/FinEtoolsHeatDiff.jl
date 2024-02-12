@@ -25,9 +25,8 @@ function T129b_l2_uq()
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(1, 2), crosssection), material)
     region1 = FDataDict("femm" => femm, "Q" => Q)
     # Make model data
-    modeldata = FDataDict("fens" => fens,
-        "regions" => [region1],
-        "essential_bcs" => [essential1])
+    modeldata =
+        FDataDict("fens" => fens, "regions" => [region1], "essential_bcs" => [essential1])
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
@@ -93,9 +92,8 @@ function T129b_l2_uq_algo()
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(1, 2), crosssection), material)
     region1 = FDataDict("femm" => femm, "Q" => Q)
     # Make model data
-    modeldata = FDataDict("fens" => fens,
-        "regions" => [region1],
-        "essential_bcs" => [essential1])
+    modeldata =
+        FDataDict("fens" => fens, "regions" => [region1], "essential_bcs" => [essential1])
 
     # Call the solver
     modeldata = AlgoHeatDiffModule.steadystate(modeldata)
@@ -108,7 +106,7 @@ function T129b_l2_uq_algo()
     function errfh(loc, val)
         x = loc[1]
         exact = (kappa[1, 1] / Q / L^2) * Q / (2 * kappa[1, 1]) * x * (L - x)
-        return ((exact - val[1]) * exact)[1]
+        return ((exact-val[1])*exact)[1]
     end
 
     femm.integdomain.integration_rule = GaussRule(1, 4)
