@@ -479,10 +479,10 @@ function Poisson_FE_H20_parass_threads_example(
     a.buffer_pointer = iend # This is crucial: the assembler needs to be informed that up to this pointer there will be data
     @info "Finished $(time() - start)"
     Threads.@threads for th in eachindex(_a)
-        @info "$(th): Started $(time() - start)"
+        # @info "$(th): Started $(time() - start)"
         femm1 = FEMMHeatDiff(IntegDomain(subset(fes, _r[th]), GaussRule(3, 3)), material)
         conductivity(femm1, _a[th], geom, Temp)
-        @info "$(th): Finished $(time() - start)"
+        # @info "$(th): Finished $(time() - start)"
     end
     @info "Started make-matrix $(time() - start)"
     K = makematrix!(a)
