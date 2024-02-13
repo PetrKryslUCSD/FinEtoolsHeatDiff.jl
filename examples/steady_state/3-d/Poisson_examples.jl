@@ -322,16 +322,16 @@ function Poisson_FE_H20_parass_tasks_example(
     iend = 0
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
-            @info "$(ch[2]): Started $(time() - start)"
+            # @info "$(ch[2]): Started $(time() - start)"
             buffer_range, iend =
                 _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
             Threads.@spawn let r = $ch[1], b = $buffer_range
-                @info "$(ch[2]): Spawned $(time() - start)"
+                # @info "$(ch[2]): Spawned $(time() - start)"
                 femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
                 _a = _task_local_assembler(a, b)
-                @info "$(ch[2]): Started conductivity $(time() - start)"
+                # @info "$(ch[2]): Started conductivity $(time() - start)"
                 conductivity(femm1, _a, geom, Temp)
-                @info "$(ch[2]): Finished $(time() - start)"
+                # @info "$(ch[2]): Finished $(time() - start)"
             end
         end
     end
