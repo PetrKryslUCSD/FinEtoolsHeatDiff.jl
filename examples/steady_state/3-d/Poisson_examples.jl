@@ -26,8 +26,8 @@ function Poisson_FE_H20_example(N = 25)
     http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
     Unit cube, with known temperature distribution along the boundary,
     and uniform heat generation rate inside.  Mesh of regular quadratic HEXAHEDRA,
-    in a grid of 30 x 30 x 30 edges (100079 degrees of freedom).
-    Version: 06/03/2017
+    in a grid of $(N) x $(N) x $(N) edges.
+    Version: 02/15/2024
     """)
     t0 = time()
     A = 1.0 # dimension of the domain (length of the side of the square)
@@ -221,10 +221,40 @@ function Poisson_FE_T4_example(N = 25)
     true
 end # Poisson_FE_T4_example
 
+function _update_buffer_range(elem_mat_nrows, elem_mat_ncols, elem_range, iend)
+    buffer_length = elem_mat_nrows * elem_mat_ncols * length(elem_range)
+    istart = iend + 1
+    iend = iend + buffer_length
+    buffer_range = istart:iend
+    return buffer_range, iend
+end
+
+function _task_local_assembler(a, buffer_range)
+    buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
+    matbuffer = view(a.matbuffer, buffer_range)
+    rowbuffer = view(a.rowbuffer, buffer_range)
+    colbuffer = view(a.colbuffer, buffer_range)
+    buffer_pointer = 1
+    nomatrixresult = true
+    force_init = false
+    return SysmatAssemblerSparse(
+        buffer_length,
+        matbuffer,
+        rowbuffer,
+        colbuffer,
+        buffer_pointer,
+        a.row_nalldofs,
+        a.col_nalldofs,
+        nomatrixresult,
+        force_init,
+    )
+end
+
 function Poisson_FE_H20_parass_tasks_example(
     N = 25,
     ntasks = Base.Threads.nthreads() - 1,
     early_return = false,
+    do_serial = false
 )
     @assert ntasks >= 1
     @info "Starting Poisson_FE_H20_parass_tasks_example with $(ntasks) tasks"
@@ -261,49 +291,22 @@ function Poisson_FE_H20_parass_tasks_example(
 
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
 
-    function _update_buffer_range(elem_mat_nrows, elem_mat_ncols, range, iend)
-        buffer_length = elem_mat_nrows * elem_mat_ncols * length(range)
-        istart = iend + 1
-        iend = iend + buffer_length
-        buffer_range = istart:iend
-        return buffer_range, iend
-    end
-
-    function _task_local_assembler(a, buffer_range)
-        buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
-        matbuffer = view(a.matbuffer, buffer_range)
-        rowbuffer = view(a.rowbuffer, buffer_range)
-        colbuffer = view(a.colbuffer, buffer_range)
-        buffer_pointer = 1
-        nomatrixresult = true
-        force_init = false
-        return SysmatAssemblerSparse(
-            buffer_length,
-            matbuffer,
-            rowbuffer,
-            colbuffer,
-            buffer_pointer,
-            ndofs_row,
-            ndofs_col,
-            nomatrixresult,
-            force_init,
-        )
-    end
-
     nne = nodesperelem(fes)
 
-    @info("Conductivity: serial")
-    start = time()
-    a = SysmatAssemblerSparse(0.0)
-    a.nomatrixresult = true
-    conductivity(femm, a, geom, Temp)
-    @info "Conductivity done serial $(time() - start)"
-    a.nomatrixresult = false
-    K = makematrix!(a)
-    @info "All done serial $(time() - start)"
-    K = nothing
-    a = nothing
-    GC.gc()
+    if do_serial
+        @info("Conductivity: serial")
+        start = time()
+        a = SysmatAssemblerSparse(0.0)
+        a.nomatrixresult = true
+        conductivity(femm, a, geom, Temp)
+        @info "Conductivity done serial $(time() - start)"
+        a.nomatrixresult = false
+        K = makematrix!(a)
+        @info "All done serial $(time() - start)"
+        K = nothing
+        a = nothing
+        GC.gc()
+    end
 
     @info("Conductivity: parallel")
     start = time()
@@ -319,18 +322,21 @@ function Poisson_FE_H20_parass_tasks_example(
         ndofs_row,
         ndofs_col,
     )
+    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
+    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
+    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
+                
     iend = 0
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
             # @info "$(ch[2]): Started $(time() - start)"
-            buffer_range, iend =
-                _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
+            buffer_range, iend = _update_buffer_range(elem_mat_nrows, elem_mat_ncols, ch[1], iend)
             Threads.@spawn let r = $ch[1], b = $buffer_range
                 # @info "$(ch[2]): Spawned $(time() - start)"
-                femm1 = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
+                _f = FEMMHeatDiff(IntegDomain(subset(fes, r), GaussRule(3, 3)), material)
                 _a = _task_local_assembler(a, b)
                 # @info "$(ch[2]): Started conductivity $(time() - start)"
-                conductivity(femm1, _a, geom, Temp)
+                conductivity(_f, _a, geom, Temp)
                 # @info "$(ch[2]): Finished $(time() - start)"
             end
         end
@@ -370,6 +376,7 @@ function Poisson_FE_H20_parass_threads_example(
     N = 25,
     ntasks = Base.Threads.nthreads() - 1,
     early_return = false,
+    do_serial = false
 )
     @assert ntasks >= 1
     @info "Starting Poisson_FE_H20_parass_threads_example with $(ntasks) tasks"
@@ -406,52 +413,23 @@ function Poisson_FE_H20_parass_threads_example(
 
     femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
 
-    function _update_buffer_range(elem_mat_nrows, elem_mat_ncols, range, iend)
-        buffer_length = elem_mat_nrows * elem_mat_ncols * length(range)
-        istart = iend + 1
-        iend = iend + buffer_length
-        buffer_range = istart:iend
-        return buffer_range, iend
-    end
-
-    function _task_local_assembler(a, buffer_range)
-        buffer_length = maximum(buffer_range) - minimum(buffer_range) + 1
-        matbuffer = view(a.matbuffer, buffer_range)
-        rowbuffer = view(a.rowbuffer, buffer_range)
-        colbuffer = view(a.colbuffer, buffer_range)
-        buffer_pointer = 1
-        nomatrixresult = true
-        return SysmatAssemblerSparse(
-            buffer_length,
-            matbuffer,
-            rowbuffer,
-            colbuffer,
-            buffer_pointer,
-            ndofs_row,
-            ndofs_col,
-            nomatrixresult,
-            false,
-        )
-    end
-
     nne = nodesperelem(fes)
 
-    @info("Conductivity: serial")
-    start = time()
-    a = SysmatAssemblerSparse(0.0)
-    a.nomatrixresult = true
-    conductivity(femm, a, geom, Temp)
-    @info "Conductivity done serial $(time() - start)"
-    # DataDrop.store_matrix("I", a.rowbuffer[1:a.buffer_pointer-1])
-    # DataDrop.store_matrix("J", a.colbuffer[1:a.buffer_pointer-1])
-    # DataDrop.store_matrix("V", a.matbuffer[1:a.buffer_pointer-1])
-    a.nomatrixresult = false
-    K = makematrix!(a)
-    @info "All done serial $(time() - start)"
-    K = nothing
-    a = nothing
-    GC.gc()
-
+    if do_serial
+        @info("Conductivity: serial")
+        start = time()
+        a = SysmatAssemblerSparse(0.0)
+        a.nomatrixresult = true
+        conductivity(femm, a, geom, Temp)
+        @info "Conductivity done serial $(time() - start)"
+        a.nomatrixresult = false
+        K = makematrix!(a)
+        @info "All done serial $(time() - start)"
+        K = nothing
+        a = nothing
+        GC.gc()
+    end
+    
     @info("Conductivity: parallel")
     start = time()
     a = SysmatAssemblerSparse(0.0)
