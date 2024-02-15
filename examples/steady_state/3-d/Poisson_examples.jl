@@ -322,10 +322,7 @@ function Poisson_FE_H20_parass_tasks_example(
         ndofs_row,
         ndofs_col,
     )
-    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
-    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
-    @time femm1 = FEMMHeatDiff(IntegDomain(subset(fes, chunks(1:count(fes), ntasks)[1][1]), GaussRule(3, 3)), material)
-                
+    # Compute the pointer into the global buffer            
     iend = 0
     Threads.@sync begin
         for ch in chunks(1:count(fes), ntasks)
