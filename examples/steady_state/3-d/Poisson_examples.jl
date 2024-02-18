@@ -13,6 +13,7 @@ using FinEtools.AssemblyModule
 using FinEtools.MeshExportModule
 using FinEtoolsHeatDiff
 using ChunkSplitters
+using LinearAlgebra
 using DataDrop
 using SparseArrays: lu
 
@@ -319,8 +320,8 @@ function Poisson_FE_H20_parass_tasks_example(
     startassembly!(
         a,
         elem_mat_nrows * elem_mat_ncols * elem_mat_nmatrices,
-        ndofs_row,
         ndofs_col,
+        ndofs_row,
     )
     # Compute the pointer into the global buffer            
     iend = 0
@@ -489,6 +490,110 @@ function Poisson_FE_H20_parass_threads_example(
     true
 end # Poisson_FE_H20_parass_threads_example
 
+function Poisson_FE_H20_parass_builtin_example(
+    N = 25,
+    ntasks = Base.Threads.nthreads() - 1,
+    early_return = false,
+    do_serial = false
+)
+    @assert ntasks >= 1
+    @info "Starting Poisson_FE_H20_parass_builtin_example with $(ntasks) tasks"
+
+    A = 1.0 # dimension of the domain (length of the side of the square)
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
+    Q = -6.0 # internal heat generation rate
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
+        forceout[1] = Q #heat source
+    end
+    tempf(x) = (1.0 .+ x[:, 1] .^ 2 + 2.0 .* x[:, 2] .^ 2)#the exact distribution of temperature1
+
+    fens, fes = H20block(A, A, A, N, N, N)
+    @info("$(count(fes)) elements")
+
+    geom = NodalField(fens.xyz)
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
+
+    Tolerance = 1.0 / N / 100.0
+    l1 = selectnode(fens; box = [0.0 0.0 0.0 A 0.0 A], inflate = Tolerance)
+    l2 = selectnode(fens; box = [A A 0.0 A 0.0 A], inflate = Tolerance)
+    l3 = selectnode(fens; box = [0.0 A 0.0 0.0 0.0 A], inflate = Tolerance)
+    l4 = selectnode(fens; box = [0.0 A A A 0.0 A], inflate = Tolerance)
+    l5 = selectnode(fens; box = [0.0 A 0.0 A 0.0 0.0], inflate = Tolerance)
+    l6 = selectnode(fens; box = [0.0 A 0.0 A A A], inflate = Tolerance)
+    List = vcat(l1, l2, l3, l4, l5, l6)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List, :])[:])
+    applyebc!(Temp)
+    numberdofs!(Temp)
+
+    @info("Number of free degrees of freedom: $(nfreedofs(Temp))")
+
+    material = MatHeatDiff(thermal_conductivity)
+
+    if do_serial
+        @info("Conductivity: serial")
+        start = time()
+        femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
+        a = SysmatAssemblerSparse(0.0)
+        a.nomatrixresult = true
+        conductivity(femm, a, geom, Temp)
+        @info "Conductivity done serial $(time() - start)"
+        a.nomatrixresult = false
+        K = makematrix!(a)
+        @info "All done serial $(time() - start)"
+        K1 = K
+        K = nothing
+        a = nothing
+        GC.gc()
+    end
+
+    @info("Conductivity: parallel")
+    start = time()
+        
+    function matrixcomputation!(femm, assembler)
+        conductivity(femm, assembler, geom, Temp)
+    end
+
+    femms = FEMMHeatDiff[]
+    @time for (ch, j) in chunks(1:count(fes), ntasks)
+        femm = FEMMHeatDiff(IntegDomain(subset(fes, ch), GaussRule(3, 3)), material)
+        push!(femms, femm)
+    end
+
+    @time assembler = make_assembler(femms, SysmatAssemblerSparse, Temp)
+    @time start_assembler!(assembler)
+    @time assemblers = make_task_assemblers(femms, assembler, SysmatAssemblerSparse, Temp)
+    @time parallel_matrix_assembly(femms, assemblers, matrixcomputation!)
+    @time K = make_matrix!(assembler)
+   
+    @info "All done $(time() - start)"
+    if early_return
+        return true # short-circuit for assembly testing
+    end
+
+    # fi = ForceIntensity(Float64, getsource!);# alternative  specification
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(3, 3)), material)
+    fi = ForceIntensity(Float64[Q])
+    F1 = distribloads(femm, geom, Temp, fi, 3)
+    solve_blocked!(Temp, K, F1)
+
+    Error = 0.0
+    for k in axes(fens.xyz, 1)
+        Error = Error + abs.(Temp.values[k, 1] - tempf(reshape(fens.xyz[k, :], (1, 3)))[1])
+    end
+    @info("Error =$Error")
+
+    File = "Poisson_FE_H20_parass_tasks_example.vtk"
+    MeshExportModule.VTK.vtkexportmesh(
+        File,
+        fes.conn,
+        geom.values,
+        MeshExportModule.VTK.H20;
+        scalars = [("T", Temp.values)],
+    )
+
+    true
+end # Poisson_FE_H20_parass_tasks_example
+
 function Poisson_FE_T4_altass_example(N = 25)
     t0 = time()
 
@@ -579,6 +684,9 @@ function Poisson_FE_T4_altass_example(N = 25)
 end # Poisson_FE_T4_example
 
 function allrun()
+    println("#####################################################")
+    println("# Poisson_FE_H20_parass_builtin_example ")
+    Poisson_FE_H20_parass_builtin_example(30, 2)
     println("#####################################################")
     println("# Poisson_FE_H20_example ")
     Poisson_FE_H20_example()
