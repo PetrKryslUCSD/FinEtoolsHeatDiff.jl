@@ -562,7 +562,9 @@ function Poisson_FE_H20_parass_builtin_example(
     @time assembler = make_assembler(femms, SysmatAssemblerSparse, Temp)
     @time start_assembler!(assembler)
     @time assemblers = make_task_assemblers(femms, assembler, SysmatAssemblerSparse, Temp)
-    @time parallel_matrix_assembly(femms, assemblers, matrixcomputation!)
+    @time Threads.@threads for j in eachindex(femms)
+        conductivity(femms[j], assemblers[j], geom, Temp)
+    end
     @time K = make_matrix!(assembler)
    
     @info "All done $(time() - start)"
