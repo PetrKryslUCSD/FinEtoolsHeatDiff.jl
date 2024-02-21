@@ -10,6 +10,7 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 
 ## News
 
+- 02/21/2024: Updated for FinEtools 8.0.
 - 09/28/2023: Updated examples.
 - 06/20/2023: Updated for FinEtools 7.0.
 - 05/20/2023: Updated for Julia 1.9.

@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "cde5df575d54396733605f8f38c9f981dc7dbb29"
+project_hash = "b4d403d882cb4218ee60ccf3b7c3bc209cbb3fcc"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -34,9 +34,9 @@ version = "3.5.1+1"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "bbec08a37f8722786d87bedf84eae19c020c4efa"
+git-tree-sha1 = "c5aeb516a84459e0318a02507d2261edad97eb75"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.7.0"
+version = "7.7.1"
 
     [deps.ArrayInterface.extensions]
     ArrayInterfaceBandedMatricesExt = "BandedMatrices"
@@ -92,9 +92,9 @@ version = "0.7.4"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
-git-tree-sha1 = "75bd5b6fc5089df449b5d35fa501c846c9b6549b"
+git-tree-sha1 = "d2c021fbdde94f6cdaa799639adfeeaa17fd67f5"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.12.0"
+version = "4.13.0"
 weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
@@ -159,9 +159,9 @@ version = "1.9.3"
 
 [[deps.FinEtools]]
 deps = ["ChunkSplitters", "DataDrop", "DelimitedFiles", "HDF5", "LinearAlgebra", "LoopVectorization", "Printf", "Random", "SparseArrays", "Statistics", "SymRCM", "Test", "Unicode", "WriteVTK"]
-git-tree-sha1 = "0287610a59506adb37f2a603680535f44bfbd8dd"
+git-tree-sha1 = "991541205ecd1714c69f683cecc5eb2418804719"
 uuid = "91bb5406-6c9a-523d-811d-0644c4229550"
-version = "7.3.2"
+version = "8.0.2"
 
 [[deps.HDF5]]
 deps = ["Compat", "HDF5_jll", "Libdl", "MPIPreferences", "Mmap", "Preferences", "Printf", "Random", "Requires", "UUIDs"]
@@ -186,6 +186,12 @@ deps = ["BitTwiddlingConvenienceFunctions", "IfElse", "Libdl", "Static"]
 git-tree-sha1 = "eb8fed28f4994600e29beef49744639d985a04b2"
 uuid = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
 version = "0.1.16"
+
+[[deps.Hwloc_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "ca0f6bf568b4bfc807e7537f081c81e35ceca114"
+uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
+version = "2.10.0+0"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -280,10 +286,10 @@ version = "0.12.166"
     SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [[deps.MPICH_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
-git-tree-sha1 = "2ee75365ca243c1a39d467e35ffd3d4d32eef11e"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Hwloc_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
+git-tree-sha1 = "656036b9ed6f942d35e536e249600bc31d0f9df8"
 uuid = "7cb0a576-ebde-5e09-9194-50597f1243b4"
-version = "4.1.2+1"
+version = "4.2.0+0"
 
 [[deps.MPIPreferences]]
 deps = ["Libdl", "Preferences"]
@@ -292,10 +298,10 @@ uuid = "3da0fdf6-3ccc-4f1b-acd9-58baa6c99267"
 version = "0.1.10"
 
 [[deps.MPItrampoline_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
-git-tree-sha1 = "8eeb3c73bbc0ca203d0dc8dad4008350bbe5797b"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Hwloc_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
+git-tree-sha1 = "77c3bd69fdb024d75af38713e883d0f249ce19c2"
 uuid = "f1f71cc9-e9ae-5b93-9b94-4fe0e1ad3748"
-version = "5.3.1+1"
+version = "5.3.2+0"
 
 [[deps.ManualMemory]]
 git-tree-sha1 = "bcaef4fc7a0cfe2cba636d84cda54b5e4e4ca3cd"
@@ -313,9 +319,9 @@ version = "2.28.2+1"
 
 [[deps.MicrosoftMPI_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "b01beb91d20b0d1312a9471a36017b5b339d26de"
+git-tree-sha1 = "f12a29c4400ba812841c6ace3f4efbb6dbb3ba01"
 uuid = "9237b28f-5490-5468-be7b-bb81f5f5e6cf"
-version = "10.1.4+1"
+version = "10.1.4+2"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -429,9 +435,9 @@ version = "1.10.0"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "b366eb1eb68075745777d80861c6706c33f588ae"
+git-tree-sha1 = "d2fdac9ff3906e27f7a618d47b676941baa6c80c"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.8.9"
+version = "0.8.10"
 
 [[deps.StaticArrayInterface]]
 deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "PrecompileTools", "Requires", "SparseArrays", "Static", "SuiteSparse"]
