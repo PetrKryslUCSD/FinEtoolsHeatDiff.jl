@@ -10,9 +10,10 @@ PProf = "e4faabce-9ead-11e9-39d9-4379958e3056"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
+SymRCM = "286e6d88-80af-4590-acc9-0001b223b9bd"
 Targe2 = "f62361a0-daf5-40d4-849b-fa9ebeca3f63"
 
 [compat]
 ChunkSplitters = "1.0, 2.0"
-FinEtools = "^7.0"
-FinEtoolsHeatDiff = "^2.0"
+FinEtools = "^8.0"
+FinEtoolsHeatDiff = "^3.0"

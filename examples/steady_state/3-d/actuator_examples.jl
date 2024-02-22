@@ -91,7 +91,7 @@ function actuator2()
     numberdofs!(Temp)
 
     K = conductivity(hotfemm, geom, Temp) + conductivity(coldfemm, geom, Temp)
-    fi = ForceIntensity(FFlt[Q])
+    fi = ForceIntensity(Float64[Q])
     F = distribloads(hotfemm, geom, Temp, fi, 3)
 
     solve_blocked!(Temp, K, F)
