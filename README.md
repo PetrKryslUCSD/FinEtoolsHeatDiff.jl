@@ -42,7 +42,7 @@ be executed as described in the  [conceptual guide to
 `FinEtools`](https://petrkryslucsd.github.io/FinEtools.jl/latest).
 For instance
 ```
-julia> include("steady_state/2-d\\Poisson_examples.jl"); Poisson_examples.allrun()  
+julia> include("steady_state/3-d/actuator_examples.jl"); Main.actuator_examples.allrun()  
 ```
 
 ## <a name="past-news"></a>Past news

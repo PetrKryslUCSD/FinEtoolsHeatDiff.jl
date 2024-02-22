@@ -5,4 +5,5 @@
 *.jls
 *.jld
 *.sublime-workspace
+*.vscode
 docs/build/
