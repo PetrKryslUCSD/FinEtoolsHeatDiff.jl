@@ -39,4 +39,7 @@ Algorithms typically (not always) accept a single argument, `modeldata`, a dicti
 
 There is an implementation of an algorithm for steady-state heat conduction.
 
+## Example
+
+![Alt Visualization of the temperature field](T4NAFEMS--T3-solution.png "Temperature field raised as a surface above the mesh")
 
