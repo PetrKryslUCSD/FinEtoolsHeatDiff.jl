@@ -2,6 +2,7 @@ using Documenter, FinEtools, FinEtoolsHeatDiff
 
 makedocs(
 	modules = [FinEtoolsHeatDiff],
+	warnonly = Documenter.except(:missing_docs, :footnote),
 	doctest = false, clean = true,
 	format = Documenter.HTML(prettyurls = false),
 	authors = "Petr Krysl",

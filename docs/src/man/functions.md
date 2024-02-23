@@ -6,7 +6,7 @@
 ### Heat diffusion
 
 ```@autodocs
-Modules = [FinEtools, FinEtoolsHeatDiff.FEMMHeatDiffModule, FinEtoolsHeatDiff.FEMMHeatDiffSurfModule]
+Modules = [FinEtools, FinEtoolsHeatDiff.FinEtoolsHeatDiff, FinEtoolsHeatDiff.FEMMHeatDiffModule, FinEtoolsHeatDiff.FEMMHeatDiffSurfModule, FinEtoolsHeatDiff.MatHeatDiffModule, FinEtoolsHeatDiff.AlgoHeatDiffModule]
 Private = true
 Order = [:function]
 ```

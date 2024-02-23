@@ -14,22 +14,20 @@ The package `FinEtoolsHeatDiff` has the following structure:
 
 ##  Heat  conduction FEM machines
 
-There is one for  the interior integrals  and one for  boundary
+There is one for  the interior integrals  and one for the boundary
 integrals. The  machine for the interior integrals can be used to
 compute:
 
-- Evaluate the conductivity matrix.
+- Conductivity matrix.
 
-- Evaluate the load vector corresponding to prescribed temperature.
+- Load vector corresponding to prescribed temperature.
 
 The machine for the boundary integrals can be used to compute:
 
-- Compute surface heat transfer  matrix.
+- Surface heat transfer  matrix.
 
-- Compute  the heat load vector for surface heat transfer.
+- Heat load vector for surface heat transfer.
 
-- Compute the heat load vector  corresponding to prescribed temperatures on the
-  boundary  with surface heat transfer. moved up
 
 ## Algorithms
 
