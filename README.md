@@ -1,6 +1,6 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Build status](https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl/workflows/CI/badge.svg)](https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl/actions)
-[![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://petrkryslucsd.github.io/FinEtoolsHeatDiff.jl/dev)
+[![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://petrkryslucsd.github.io/FinEtoolsHeatDiff.jl/latest)
 
 # FinEtoolsHeatDiff: Linear heat diffusion analysis
 
@@ -10,11 +10,9 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 
 ## News
 
+- 02/23/2024: Updated documentation.
 - 02/21/2024: Updated for FinEtools 8.0.
 - 09/28/2023: Updated examples.
-- 06/20/2023: Updated for FinEtools 7.0.
-- 05/20/2023: Updated for Julia 1.9.
-- 04/22/2023: Updated for generic FinEtools.
 
 [Past news](#past-news)
 
@@ -47,6 +45,9 @@ julia> include("steady_state/3-d/actuator_examples.jl"); Main.actuator_examples.
 
 ## <a name="past-news"></a>Past news
 
+- 06/20/2023: Updated for FinEtools 7.0.
+- 05/20/2023: Updated for Julia 1.9.
+- 04/22/2023: Updated for generic FinEtools.
 - 03/08/2022: Introduced incompatible change of the assemblers (FinEtools 6.0.1).
 - 05/05/2022: Renamed the branch `main`. Updated for Julia 1.7.
 - 05/23/2021: Updated for Julia 1.6.
