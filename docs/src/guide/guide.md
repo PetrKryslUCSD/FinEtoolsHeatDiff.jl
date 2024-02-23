@@ -41,5 +41,5 @@ There is an implementation of an algorithm for steady-state heat conduction.
 
 ## Example
 
-![Alt Visualization of the temperature field](T4NAFEMS--T3-solution.png "Temperature field raised as a surface above the mesh")
+![Alt Visualization of the temperature field](assets/T4NAFEMS--T3-solution.png "Temperature field raised as a surface above the mesh")
 
