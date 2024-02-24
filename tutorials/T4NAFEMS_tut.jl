@@ -9,23 +9,23 @@ function T4NAFEMS_T3_algo()
     
     ### Description
     
-    Consider a plate of uniform thickness, measuring 0.6 m by 1.0 m. On one
-    short edge the temperature is fixed at 100 °C, and on one long edge the
-    plate is perfectly insulated so that the heat flux is zero through that
-    edge. The other two edges are losing heat via convection to an ambient
-    temperature of 0 °C. The thermal conductivity of the plate is 52.0 W/(m
-    .°K), and the convective heat transfer coefficient is 750 W/(m^2.°K).
-    There is no internal generation of heat. Calculate the temperature 0.2 m
-    along the un-insulated long side, measured from the intersection with the
-    fixed temperature side. The reference result is 18.25 °C.
+    # Consider a plate of uniform thickness, measuring 0.6 m by 1.0 m. On one
+    # short edge the temperature is fixed at 100 °C, and on one long edge the
+    # plate is perfectly insulated so that the heat flux is zero through that
+    # edge. The other two edges are losing heat via convection to an ambient
+    # temperature of 0 °C. The thermal conductivity of the plate is 52.0 W/(m
+    # .°K), and the convective heat transfer coefficient is 750 W/(m^2.°K).
+    # There is no internal generation of heat. Calculate the temperature 0.2 m
+    # along the un-insulated long side, measured from the intersection with the
+    # fixed temperature side. The reference result is 18.25 °C.
     
-    The reference temperature at the point A  is 18.25 °C according to the
-    NAFEMS publication (which cites the book Carslaw, H.S. and J.C. Jaeger,
-    Conduction of Heat in Solids. 1959: Oxford University Press).
+    # The reference temperature at the point A  is 18.25 °C according to the
+    # NAFEMS publication (which cites the book Carslaw, H.S. and J.C. Jaeger,
+    # Conduction of Heat in Solids. 1959: Oxford University Press).
     
-    The present  tutorial will investigate the reference temperature  and it
-    will attempt to  estimate the  limit value more precisely using a
-    sequence of meshes and Richardson's extrapolation.
+    # The present  tutorial will investigate the reference temperature  and it
+    # will attempt to  estimate the  limit value more precisely using a
+    # sequence of meshes and Richardson's extrapolation.
 
     # ### Solution
     
@@ -129,5 +129,6 @@ function T4NAFEMS_T3_algo()
     true
 end # T4NAFEMS_T3_algo
 
+T4NAFEMS_T3_algo()
 end # module 
 nothing
