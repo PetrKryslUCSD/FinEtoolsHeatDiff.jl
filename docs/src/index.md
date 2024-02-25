@@ -1,4 +1,4 @@
-# FinEtools (Finite Element tools) Documentation
+# FinEtoolsHeatDiff Documentation
 
 
 ```@contents
