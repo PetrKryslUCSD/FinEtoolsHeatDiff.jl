@@ -2,6 +2,9 @@
 
 The [`FinEtools`](https://petrkryslucsd.github.io/FinEtools.jl/latest/index.html) package is used here to solve heat conduction problems.
 
+Tutorials  are provided in the form of Julia scripts and Markdown files in a dedicated folder: [`index of tutorials`](https://github.com/PetrKryslUCSD/FinEtoolsHeatDiff.jl/blob/main/tutorials/index.md). 
+
+
 ## Modules
 
 The package `FinEtoolsHeatDiff` has the following structure:
