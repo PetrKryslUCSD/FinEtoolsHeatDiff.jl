@@ -5,7 +5,8 @@ using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
-using ParFEM.Exports
+using FinEtoolsMultithreading.Exports
+using FinEtoolsMultithreading: csc_matrix
 
 function Poisson_FE_example()
     println("""
@@ -282,7 +283,7 @@ function Poisson_FE_Q4_example()
     true
 end # Poisson_FE_Q4_example
 
-function Poisson_FE_Q4_parallel_example(N = 2000, ntasks = Threads.nthreads())
+function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), assembly_only = false)
     println("""
 
     Heat conduction example described by Amuthan A. Ramabathiran
@@ -293,7 +294,6 @@ function Poisson_FE_Q4_parallel_example(N = 2000, ntasks = Threads.nthreads())
     Version: 03/13/2024
     """)
     
-
     A = 1.0
     thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:2, j = 1:2] # conductivity matrix
     function getsource!(forceout, XYZ, tangents, feid, qpid)
@@ -331,18 +331,36 @@ function Poisson_FE_Q4_parallel_example(N = 2000, ntasks = Threads.nthreads())
         conductivity(femm, assembler, geom, Temp)
     end
 
+    n2e = FENodeToFEMap(fes.conn, nnodes(Temp))
+
     println("Conductivity")
     t0 = time(); 
+
     t1 = time()
     assembler = fill_assembler(fes, Temp, createsubdomain, matrixcomputation!, ntasks)
-    println("Fill assembler = $(time() - t1) [s]")
+    println("    Fill assembler = $(time() - t1) [s]")
+
     t1 = time()
-    K = make_pattern(fes, Temp, :CSC)
-    println("Makes sparsity pattern = $(time() - t1) [s]")
+    n2n = FENodeToNeighborsMap(n2e, fes.conn)
+    println("    Make node to neighbor map = $(time() - t1) [s]")
+
+    t1 = time()
+    start, dofs = sparsity_pattern_symmetric(fes, Temp, n2n)
+    println("    Make sparsity pattern = $(time() - t1) [s]")
+
+    t1 = time()
+    K = csc_matrix(start, dofs, nalldofs(Temp), zero(eltype(Temp.values)))
+    println("    Make zero matrix = $(time() - t1) [s]")
+
     t1 = time()
     add_to_matrix!(K, assembler)
-    println("Add to matrix = $(time() - t1) [s]")
-    println("Total = $(time() - t0) [s]")
+    println("    Add to matrix = $(time() - t1) [s]")
+
+    println("Assembly total = $(time() - t0) [s]")
+
+    if assembly_only
+        return
+    end
     
     println("Internal heat generation")
     fi = ForceIntensity(Float64, 1, getsource!)
