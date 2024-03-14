@@ -6,7 +6,6 @@ using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
 using FinEtoolsMultithreading.Exports
-using FinEtoolsMultithreading: csc_matrix
 
 function Poisson_FE_example()
     println("""
@@ -331,7 +330,9 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
         conductivity(femm, assembler, geom, Temp)
     end
 
+    t1 = time()
     n2e = FENodeToFEMap(fes.conn, nnodes(Temp))
+    println("Make node to element map = $(time() - t1) [s]")
 
     println("Conductivity")
     t0 = time(); 
@@ -345,12 +346,8 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
     println("    Make node to neighbor map = $(time() - t1) [s]")
 
     t1 = time()
-    start, dofs = sparsity_pattern_symmetric(fes, Temp, n2n)
-    println("    Make sparsity pattern = $(time() - t1) [s]")
-
-    t1 = time()
-    K = csc_matrix(start, dofs, nalldofs(Temp), zero(eltype(Temp.values)))
-    println("    Make zero matrix = $(time() - t1) [s]")
+    K = sparse_symmetric_zero(Temp, n2n, :CSC)
+    println("    Make sparse zero = $(time() - t1) [s]")
 
     t1 = time()
     add_to_matrix!(K, assembler)
