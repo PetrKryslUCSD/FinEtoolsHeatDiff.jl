@@ -5,6 +5,7 @@ using FinEtools.AlgoBaseModule: solve_blocked!, matrix_blocked, vector_blocked
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
+using ParFEM.Exports
 
 function Poisson_FE_example()
     println("""
@@ -266,6 +267,93 @@ function Poisson_FE_Q4_example()
 
     println("Total time elapsed = $(time() - t0) [s]")
     println("Solution time elapsed = $(time() - t1) [s]")
+
+    # using MeshExportModule
+
+    # File =  "a.vtk"
+    # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.Q4; scalars=Temp.values, scalars_name ="Temperature")
+
+    Error = 0.0
+    for k = 1:size(fens.xyz, 1)
+        Error = Error + abs.(Temp.values[k, 1] - tempf(fens.xyz[k, :]...))
+    end
+    println("Error =$Error")
+
+    true
+end # Poisson_FE_Q4_example
+
+function Poisson_FE_Q4_parallel_example(N = 2000, ntasks = Threads.nthreads())
+    println("""
+
+    Heat conduction example described by Amuthan A. Ramabathiran
+    http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia:
+    Unit square, with known temperature distribution along the boundary,
+    and uniform heat generation rate inside.  Mesh of regular four-node QUADRILATERALS,
+    in a grid of $(N) x $(N) edges.
+    Version: 03/13/2024
+    """)
+    
+
+    A = 1.0
+    thermal_conductivity = [i == j ? one(Float64) : zero(Float64) for i = 1:2, j = 1:2] # conductivity matrix
+    function getsource!(forceout, XYZ, tangents, feid, qpid)
+        forceout[1] = -6.0 #heat source
+        return forceout
+    end
+    tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
+    tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
+
+    println("Mesh generation")
+    fens, fes = Q4block(A, A, N, N)
+
+    geom = NodalField(fens.xyz)
+    Temp = NodalField(zeros(size(fens.xyz, 1), 1))
+
+    println("Searching nodes  for BC")
+    l1 = selectnode(fens; box = [0.0 0.0 0.0 A], inflate = 1.0 / N / 100.0)
+    l2 = selectnode(fens; box = [A A 0.0 A], inflate = 1.0 / N / 100.0)
+    l3 = selectnode(fens; box = [0.0 A 0.0 0.0], inflate = 1.0 / N / 100.0)
+    l4 = selectnode(fens; box = [0.0 A A A], inflate = 1.0 / N / 100.0)
+    List = vcat(l1, l2, l3, l4)
+    setebc!(Temp, List, true, 1, tempf(geom.values[List, :])[:])
+    applyebc!(Temp)
+
+    numberdofs!(Temp)
+
+    m = MatHeatDiff(thermal_conductivity)
+    femm = FEMMHeatDiff(IntegDomain(fes, GaussRule(2, 2)), m)
+
+    function createsubdomain(fessubset)
+        FEMMHeatDiff(IntegDomain(fessubset, GaussRule(2, 2)), m)
+    end
+
+    function matrixcomputation!(femm, assembler)
+        conductivity(femm, assembler, geom, Temp)
+    end
+
+    println("Conductivity")
+    t0 = time(); 
+    t1 = time()
+    assembler = fill_assembler(fes, Temp, createsubdomain, matrixcomputation!, ntasks)
+    println("Fill assembler = $(time() - t1) [s]")
+    t1 = time()
+    K = make_pattern(fes, Temp, :CSC)
+    println("Makes sparsity pattern = $(time() - t1) [s]")
+    t1 = time()
+    add_to_matrix!(K, assembler)
+    println("Add to matrix = $(time() - t1) [s]")
+    println("Total = $(time() - t0) [s]")
+    
+    println("Internal heat generation")
+    fi = ForceIntensity(Float64, 1, getsource!)
+    F = distribloads(femm, geom, Temp, fi, 3)
+
+    println("Solution")
+    t1 = time()
+    solve_blocked!(Temp, K, F)
+    println("Solve = $(time() - t1) [s]")
+
+    println("Total time elapsed = $(time() - t0) [s]")
 
     # using MeshExportModule
 

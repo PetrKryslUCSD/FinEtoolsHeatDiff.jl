@@ -18,10 +18,6 @@ using DataDrop
 using SparseArrays
 using SymRCM
 
-# include("adhoc_assembler.jl")
-# include("dict_assembler.jl")
-# include("sparspak_assembler.jl")
-
 function Poisson_FE_H20_example(N = 25)
     println("""
     Heat conduction example described by Amuthan A. Ramabathiran
@@ -227,6 +223,7 @@ function zerooutsparse(S)
     S.nzval .= zero(eltype(S.nzval))
     return S
 end
+
 function _updcol!(nzval, i, v, st, fi, rowval)
     for r = st:fi
         if i == rowval[r]
@@ -235,6 +232,7 @@ function _updcol!(nzval, i, v, st, fi, rowval)
         end
     end
 end
+
 function addtosparsepar(S, I, J, V)
     for t in eachindex(J)
         j = J[t]
@@ -242,6 +240,7 @@ function addtosparsepar(S, I, J, V)
     end
     return S
 end
+
 function addtosparse(S, I, J, V)
     for t in eachindex(J)
         j = J[t]
@@ -255,6 +254,7 @@ function addtosparse(S, I, J, V)
     end
     return S
 end
+
 function addtosparse3(S, I, J, V)
     @inbounds for t in eachindex(J)
         j = J[t]
