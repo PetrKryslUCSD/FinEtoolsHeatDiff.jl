@@ -341,6 +341,8 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
     println("Make node to element map = $(times["FENodeToFEMap"]) [s]")
 
     println("Conductivity")
+    GC.enable(false)
+
     t0 = time(); 
 
     t1 = time()
@@ -365,6 +367,8 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
 
     times["TotalAssembly"] = time() - t0
     println("Assembly total = $(times["TotalAssembly"]) [s]")
+
+    GC.enable(true)
 
     if assembly_only
         DataDrop.store_json("Poisson_FE_Q4_parallel_example-timing-nth=$(Threads.nthreads())", times)
