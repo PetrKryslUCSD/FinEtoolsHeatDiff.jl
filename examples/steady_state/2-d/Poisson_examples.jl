@@ -6,6 +6,7 @@ using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky
 using FinEtoolsMultithreading.Exports
+using DataDrop
 
 function Poisson_FE_example()
     println("""
@@ -302,8 +303,12 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
     tempf(x, y) = (1.0 + x^2 + 2.0 * y^2)#the exact distribution of temperature
     tempf(x) = tempf.(view(x, :, 1), view(x, :, 2))
 
+    times = Dict{String, Float64}()
+
     println("Mesh generation")
+    t1 = time()
     fens, fes = Q4block(A, A, N, N)
+    times["MeshGeneration"] = time() - t1
 
     geom = NodalField(fens.xyz)
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
@@ -329,33 +334,40 @@ function Poisson_FE_Q4_parallel_example(N = 100, ntasks = Threads.nthreads(), as
     function matrixcomputation!(femm, assembler)
         conductivity(femm, assembler, geom, Temp)
     end
-
+        
     t1 = time()
     n2e = FENodeToFEMap(fes.conn, nnodes(Temp))
-    println("Make node to element map = $(time() - t1) [s]")
+    times["FENodeToFEMap"] = time() - t1
+    println("Make node to element map = $(times["FENodeToFEMap"]) [s]")
 
     println("Conductivity")
     t0 = time(); 
 
     t1 = time()
     assembler = fill_assembler(fes, Temp, createsubdomain, matrixcomputation!, ntasks)
-    println("    Fill assembler = $(time() - t1) [s]")
+    times["FillAssembler"] = time() - t1
+    println("    Fill assembler = $(times["FillAssembler"]) [s]")
 
     t1 = time()
     n2n = FENodeToNeighborsMap(n2e, fes.conn)
-    println("    Make node to neighbor map = $(time() - t1) [s]")
+    times["FENodeToNeighborsMap"] = time() - t1
+    println("    Make node to neighbor map = $(times["FENodeToNeighborsMap"]) [s]")
 
     t1 = time()
     K = sparse_symmetric_zero(Temp, n2n, :CSC)
-    println("    Make sparse zero = $(time() - t1) [s]")
+    times["SparseZero"] = time() - t1
+    println("    Make sparse zero = $(times["SparseZero"]) [s]")
 
     t1 = time()
     add_to_matrix!(K, assembler)
-    println("    Add to matrix = $(time() - t1) [s]")
+    times["AddToMatrix"] = time() - t1
+    println("    Add to matrix = $(times["AddToMatrix"]) [s]")
 
-    println("Assembly total = $(time() - t0) [s]")
+    times["TotalAssembly"] = time() - t0
+    println("Assembly total = $(times["TotalAssembly"]) [s]")
 
     if assembly_only
+        DataDrop.store_json("Poisson_FE_Q4_parallel_example-timing-nth=$(Threads.nthreads())", times)
         return
     end
     
