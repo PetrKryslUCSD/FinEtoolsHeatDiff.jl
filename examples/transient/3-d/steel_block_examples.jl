@@ -1,5 +1,6 @@
 """
-Transient heating of a rectangular steel block suddenly subject to surface temperature of 100° C.
+Transient heating of a rectangular steel block suddenly subject to surface
+temperature of 100° C.
 
 The initial temperature of the block is 20° C. The temperature at the center
 climbs from 20° C to approximately 90° C in 1200 seconds.
@@ -14,7 +15,7 @@ using PlotlyLight
 
 function steel_block_m()
     # Thermal conductivity
-    thermal_conductivity = [i == j ? 44.0 * phun("W/K/m") : zero(FFlt) for i = 1:3, j = 1:3] # conductivity matrix
+    thermal_conductivity = [i == j ? 44.0 * phun("W/K/m") : zero(Float64) for i = 1:3, j = 1:3] # conductivity matrix
     # Specific heat: the specific heat is per unit volume
     rho = 8000 * phun("kg/m^3")
     specific_heat = 470.0 * phun("J/kg/K") * rho
@@ -67,12 +68,17 @@ function steel_block_m()
 
     K = conductivity(femm, geom, Temp)
     C = capacity(femm, geom, Temp)
-    L = nzebcloadsconductivity(femm, geom, Temp)
 
-    A = cholesky((1 / dt * C + theta * K))
-    B = (1 / dt * C - (1 - theta) * K)
+    K_ff = matrix_blocked_ff(K, nfreedofs(Temp))
+    K_fd = matrix_blocked_fd(K, nfreedofs(Temp))
+    C_ff = matrix_blocked_ff(C, nfreedofs(Temp))
+    T_d = gathersysvec(Temp, :d)
+    L_f = -K_fd * T_d
 
-    Tn = gathersysvec(Temp)
+    A_ff = cholesky((1 / dt * C_ff + theta * K_ff))
+    B_ff = (1 / dt * C_ff - (1 - theta) * K_ff)
+
+    Tn = gathersysvec(Temp, :f)
     Tn1 = deepcopy(Tn)
 
     tstart = time()
@@ -85,8 +91,8 @@ function steel_block_m()
         Tn .= Tn1 # current temperature system vector
 
         # Solve for the new temperature  vector
-        rhs = B * Tn + L # complete right-hand side (loads)
-        Tn1 .= A \ rhs # compute next temperature
+        rhs = B_ff * Tn + L_f # complete right-hand side (loads)
+        Tn1 .= A_ff \ rhs # compute next temperature
         push!(ts, t)
         push!(center_T, Tn1[centerdof, 1][1])
         if (t == tend) # Have we reached the end?  If so jump out.
