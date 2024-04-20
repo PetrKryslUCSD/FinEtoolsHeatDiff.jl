@@ -3,18 +3,18 @@ using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
 import LinearAlgebra: cholesky, mul!
-using UnicodePlots
+using PlotlyLight
 # using BenchmarkTools
 
 function hill_decay_t3()
-    thermal_conductivity = [i == j ? 0.2 : zero(FFlt) for i = 1:2, j = 1:2] # conductivity matrix
+    thermal_conductivity = [i == j ? 0.2 : zero(Float64) for i = 1:2, j = 1:2] # conductivity matrix
     Width = 60.0
     Height = 40.0
     N = 50
     specific_heat = 1.0
     theta = 1.0 # generalized trapezoidal method parameter
     dt = 2.0 # time step
-    tend = 20 * dt # length of the time interval
+    tend = 2000 * dt # length of the time interval
     T0(x, y) = 500.0 / (x^2 + y^2 + 5)# Initial distribution of temperature
 
     tolerance = Width / N / 100
@@ -85,15 +85,11 @@ function hill_decay_t3()
 
     # @show Corner_T
     @show minimum(Corner_T), maximum(Corner_T)
-    plt = lineplot(
-        vec(ts),
-        vec(Corner_T),
-        canvas = DotCanvas,
-        title = "Transient temperature at the corner",
-        name = "T",
-        xlabel = "Time",
-        ylabel = "T",
-    )
+    plt = PlotlyLight.Plot()
+    plt(x = vec(ts), y = vec(Corner_T))
+    plt.layout.xaxis.title = "Time"
+    plt.layout.yaxis.title = "Corner T"
+
     display(plt)
     # File =  "a.vtk"
     # MeshExportModule.vtkexportmesh (File, fes.conn, [geom.values Temp.values], MeshExportModule.T3; scalars=Temp.values, scalars_name ="Temperature")

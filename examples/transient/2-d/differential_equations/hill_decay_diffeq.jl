@@ -1,19 +1,19 @@
-module hill_decay_diffeq_mass
+module hill_decay_diffeq
 using FinEtools
 using FinEtoolsHeatDiff
 using FinEtoolsHeatDiff.AlgoHeatDiffModule
-import LinearAlgebra: lu!, mul!, cholesky, I
-using UnicodePlots
+import LinearAlgebra: cholesky
+using PlotlyLight
 using DifferentialEquations
 
 function hill_decay_t3()
-    thermal_conductivity = [i == j ? 0.2 : zero(FFlt) for i = 1:2, j = 1:2] # conductivity matrix
+    thermal_conductivity = [i == j ? 0.2 : zero(Float64) for i = 1:2, j = 1:2] # conductivity matrix
     Width = 60.0
     Height = 40.0
     N = 50
     specific_heat = 1.0
     dt = 2.0 # time step
-    tend = 20 * dt # length of the time interval
+    tend = 2000 * dt # length of the time interval
     T0(x, y) = 500.0 / (x^2 + y^2 + 5)# Initial distribution of temperature
 
     tolerance = Width / N / 100
@@ -53,12 +53,11 @@ function hill_decay_t3()
 
     tstart = time()
     f(dT, T, p, t) = begin
-        dT .= -((K * T))
+        dT .= -(CF \ (K * T))
     end
     tspan = (0.0, tend)
-    ff = ODEFunction(f, mass_matrix = C)
-    prob = ODEProblem(ff, Tn, tspan)
-    sol = solve(prob, Rosenbrock23(autodiff = false), abstol = 1.0e-4, reltol = 1.0e-4)
+    prob = ODEProblem(f, Tn, tspan)
+    sol = solve(prob, KenCarp4(autodiff = false), abstol = 1.0e-4, reltol = 1.0e-4)
     # @show sol
     println("Time = $(time() - tstart)")
 
@@ -74,21 +73,17 @@ function hill_decay_t3()
     @show ts
     @show Corner_T
     @show minimum(Corner_T), maximum(Corner_T)
-    plt = lineplot(
-        vec(ts),
-        vec(Corner_T),
-        canvas = DotCanvas,
-        title = "Transient temperature at the corner",
-        name = "T",
-        xlabel = "Time",
-        ylabel = "T",
-    )
+    plt = PlotlyLight.Plot()
+    plt(x = vec(ts), y = vec(Corner_T))
+    plt.layout.xaxis.title = "Time"
+    plt.layout.yaxis.title = "Corner T"
+
     display(plt)
 
     true
 end
 
-end # module hill_decay_diffeq_mass
+end # module hill_decay_diffeq
 
-using .hill_decay_diffeq_mass
-hill_decay_diffeq_mass.hill_decay_t3()
+using .hill_decay_diffeq
+hill_decay_diffeq.hill_decay_t3()

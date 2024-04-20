@@ -38,7 +38,7 @@ function maze_1_T3_example()
     Temp = NodalField(zeros(size(fens.xyz, 1), 1))
 
     l1 = selectnode(fens; box = [0.0 0.0 0.0 0.0], inflate = tolerance)
-    setebc!(Temp, l1, 1, zero(FFlt))
+    setebc!(Temp, l1, 1, zero(Float64))
     applyebc!(Temp)
 
     numberdofs!(Temp)
@@ -50,12 +50,12 @@ function maze_1_T3_example()
 
     l1 = selectelem(fens, edge_fes, box = [0 a 0.0 0.0])
     el1femm = FEMMBase(IntegDomain(subset(edge_fes, l1), GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[-magn])#entering the domain
+    fi = ForceIntensity(Float64[-magn])#entering the domain
     F1 = (-1) * distribloads(el1femm, geom, Temp, fi, 2)
 
     l2 = selectelem(fens, edge_fes, box = [a + b a + b + a 0.0 0.0])
     el2femm = FEMMBase(IntegDomain(subset(edge_fes, l2), GaussRule(1, 2)))
-    fi = ForceIntensity(FFlt[+magn])#leaving the domain
+    fi = ForceIntensity(Float64[+magn])#leaving the domain
     F2 = (-1) * distribloads(el2femm, geom, Temp, fi, 2)
 
     solve_blocked!(Temp, K, F1 + F2)

@@ -6,14 +6,14 @@ import LinearAlgebra: cholesky
 using PlotlyLight
 
 function hill_decay_t3()
-    thermal_conductivity = [i == j ? 0.2 : zero(FFlt) for i = 1:2, j = 1:2] # conductivity matrix
+    thermal_conductivity = [i == j ? 0.2 : zero(Float64) for i = 1:2, j = 1:2] # conductivity matrix
     Width = 60.0
     Height = 40.0
     N = 10
     specific_heat = 1.0
-    theta = 1.0 # generalized trapezoidal method parameter
+    theta = 0.6 # generalized trapezoidal method parameter
     dt = 0.2 # time step
-    tend = 200 * dt # length of the time interval
+    tend = 20000 * dt # length of the time interval
     T0(x, y) = 500.0 / (x^2 + y^2 + 5)# Initial distribution of temperature
 
     tolerance = Width / N / 100
@@ -78,8 +78,8 @@ function hill_decay_t3()
 
     plt = PlotlyLight.Plot()
     plt(x = vec(ts), y = vec(Corner_T))
-    plt.layout.xaxis.title = "x"
-    plt.layout.yaxis.title = "T"
+    plt.layout.xaxis.title = "Time"
+    plt.layout.yaxis.title = "Corner T"
 
     display(plt)
     # File =  "a.vtk"

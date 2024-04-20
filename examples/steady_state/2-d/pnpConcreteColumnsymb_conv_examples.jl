@@ -41,16 +41,16 @@ function pnpConcreteColumnsymb_conv()
 
     cfemm = FEMMHeatDiffSurf(IntegDomain(bfes, GaussRule(1, 2), Dz), h)
     femm = FEMMHeatDiff(IntegDomain(fes, TriRule(1), Dz), m)
-    fi = ForceIntensity(FFlt[Q])
+    fi = ForceIntensity(Float64[Q])
     F1 = distribloads(femm, geom, Temp, fi, 3)
     K = conductivity(femm, geom, Temp)
 
     H = surfacetransfer(cfemm, geom, Temp)
     @show H
     # F3 = surfacetransferloads(femm, geom, temp, amb);
-    K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))
-    @show H_ff, H_fd = matrix_blocked(H, nfreedofs(Temp), nfreedofs(Temp), (:ff, :fd))
-    @show F_f, ~ = vector_blocked(F1, nfreedofs(Temp), (:f,))
+    K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+    @show H_ff, H_fd = matrix_blocked(H, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
+    @show F_f = vector_blocked(F1, nfreedofs(Temp))[:f]
     T_d = gathersysvec(Temp, :d)
     T_f = (K_ff + H_ff) \ (F_f - (K_fd + H_fd) * T_d)
     scattersysvec!(Temp, T_f)

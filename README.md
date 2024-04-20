@@ -10,10 +10,10 @@ using `FinEtools` to solve linear heat conduction (diffusion) problems.
 
 ## News
 
-- 02/25/2024: Enables tutorials.
-- 02/23/2024: Updated documentation.
-- 02/21/2024: Updated for FinEtools 8.0.
-- 09/28/2023: Updated examples.
+- 02/25/2024: Enable tutorials.
+- 02/23/2024: Update documentation.
+- 02/21/2024: Update for FinEtools 8.0.
+- 09/28/2023: Update examples.
 
 [Past news](#past-news)
 
@@ -46,12 +46,12 @@ julia> include("steady_state/3-d/actuator_examples.jl"); Main.actuator_examples.
 
 ## <a name="past-news"></a>Past news
 
-- 06/20/2023: Updated for FinEtools 7.0.
-- 05/20/2023: Updated for Julia 1.9.
-- 04/22/2023: Updated for generic FinEtools.
-- 03/08/2022: Introduced incompatible change of the assemblers (FinEtools 6.0.1).
-- 05/05/2022: Renamed the branch `main`. Updated for Julia 1.7.
-- 05/23/2021: Updated for Julia 1.6.
-- 10/11/2019: Corrected design flaw in matrix utilities.
-- 08/30/2019: A transient heat-conduction example added.
-- 06/11/2019: Applications are now separated  out from the `FinEtools` package.
+- 06/20/2023: Update for FinEtools 7.0.
+- 05/20/2023: Update for Julia 1.9.
+- 04/22/2023: Update for generic FinEtools.
+- 03/08/2022: Introduce incompatible change of the assemblers (FinEtools 6.0.1).
+- 05/05/2022: Rename the branch `main`. Update for Julia 1.7.
+- 05/23/2021: Update for Julia 1.6.
+- 10/11/2019: Correct design flaw in matrix utilities.
+- 08/30/2019: Add a transient heat-conduction example.
+- 06/11/2019: Separate applications out from the `FinEtools` package.
