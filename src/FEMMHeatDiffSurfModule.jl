@@ -9,7 +9,7 @@ module FEMMHeatDiffSurfModule
 using FinEtools.FENodeSetModule: FENodeSet
 using FinEtools.FESetModule: AbstractFESet, nodesperelem, manifdim
 using FinEtools.IntegDomainModule: IntegDomain, integrationdata, Jacobiansurface
-using FinEtools.FieldModule: ndofs, gatherdofnums!, gatherfixedvalues_asvec!,
+using FinEtools.FieldModule: ndofs, gatherdofnums!, 
     gathervalues_asvec!, gathervalues_asmat!, nalldofs
 using FinEtools.NodalFieldModule: NodalField
 using FinEtools.AssemblyModule: AbstractSysvecAssembler, AbstractSysmatAssembler,

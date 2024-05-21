@@ -11,7 +11,7 @@ using FinEtools.FESetModule: AbstractFESet, nodesperelem, manifdim, gradN!
 using FinEtools.IntegDomainModule: IntegDomain, integrationdata, Jacobianvolume
 using FinEtools.CSysModule: CSys, updatecsmat!, csmat
 using FinEtools.FieldModule: ndofs,
-    gatherdofnums!, gatherfixedvalues_asvec!, gathervalues_asvec!, gathervalues_asmat!
+    gatherdofnums!, gathervalues_asvec!, gathervalues_asmat!
 using FinEtools.NodalFieldModule: NodalField
 using FinEtools.ElementalFieldModule: ElementalField
 using FinEtools.AssemblyModule: AbstractSysvecAssembler, AbstractSysmatAssembler,

@@ -57,7 +57,7 @@ function test()
 
   K_ff, K_fd = matrix_blocked(K, nfreedofs(Temp), nfreedofs(Temp))[(:ff, :fd)]
   F_f = vector_blocked((F1), nfreedofs(Temp))[:f]
-  T_d = gathersysvec(Temp, :d)
+  T_d = gathersysvec(Temp, DOF_KIND_DATA)
 
   T_f = K_ff\(F_f - K_fd * T_d)
   scattersysvec!(Temp, T_f)
