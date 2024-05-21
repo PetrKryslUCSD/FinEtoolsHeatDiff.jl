@@ -14,6 +14,7 @@ using FinEtools.NodalFieldModule: NodalField, nnodes
 using FinEtools.FEMMBaseModule: associategeometry!, distribloads
 using FinEtools.ForceIntensityModule: ForceIntensity
 using FinEtools.MeshSelectionModule: connectednodes
+using FinEtools: DOF_KIND_DATA
 using SparseArrays: spzeros
 using LinearAlgebra: cholesky
 using FinEtoolsHeatDiff.FEMMHeatDiffModule: conductivity
@@ -195,7 +196,7 @@ function steadystate(modeldata::FDataDict)
     # Solve for the temperatures
     K_ff, K_fd = matrix_blocked(K, nfreedofs(temp))[(:ff, :fd)]
     F_f = vector_blocked(F, nfreedofs(temp))[:f]
-    T_d = gathersysvec(temp, :d)
+    T_d = gathersysvec(temp, DOF_KIND_DATA)
 
     # Loads due to the essential boundary conditions on the temperature field
     essential_bcs = get(modeldata, "essential_bcs", nothing)
