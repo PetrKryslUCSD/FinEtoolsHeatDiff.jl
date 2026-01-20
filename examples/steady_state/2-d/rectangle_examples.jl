@@ -16,9 +16,6 @@ function rectangle_1_T3_example()
     a, d = 1.0, 1.6
     v = [0 0; a 0; a d; 0 d]
 
-    thickness = 1.0
-    tolerance = min(a, d) / 10000
-
     s = polygon(v)
 
     commands = """
@@ -51,6 +48,7 @@ function rectangle_1_T3_example()
     F = distribloads(femm, geom, Temp, fi, 3)
 
     solve_blocked!(Temp, K, F)
+    
 
     File = "rectangle_1_T3_example-T.vtk"
     vtkexportmesh(
